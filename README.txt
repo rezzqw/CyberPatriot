@@ -6,6 +6,9 @@ CYBER PATRIOT SCRIPTS AND CHECKLIST
 4. then go thru the checklist #1 for your OS
 5. once done scim thru the checklist #2 to see if you missed anything
 
+lusrmgr.msc
+secpol.msc
+Cyb3rPatr!0t$
 
 Checklists
 
