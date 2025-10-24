@@ -142,7 +142,12 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	net accounts /maxpwage:60
 	net accounts /minpwage:10
 	net accounts /uniquepw:3
-	echo CHECK TO SEE IF "Password must meet complexity requirements" IS ENABLED
+	
+	rem Enable password complexity requirements
+	secedit /export /cfg %temp%\secpol.cfg
+	(echo [Unicode]&echo Unicode=yes&echo [System Access]&echo PasswordComplexity = 1&echo [Version]&echo signature="$CHICAGO$"&echo Revision=1) > %temp%\secpol.cfg
+	secedit /configure /db %windir%\security\local.sdb /cfg %temp%\secpol.cfg /areas SECURITYPOLICY
+	del %temp%\secpol.cfg
 	
 	pause
 	goto :menu
