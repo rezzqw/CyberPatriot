@@ -27,3 +27,4 @@ Scripts
 2.Windows.bat
 
     Script that does basic securing, checklist is still needed to fully harden the system.
+    *Changing all passwords* (Number 4) makes the new password Cyb3rPatr!0t$

@@ -68,18 +68,19 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :passwd
 	echo Changing all user passwords
 	
-	endlocal
-	setlocal EnableExtensions
-	for /F "tokens=2* delims==" %%G in ('
-		wmic UserAccount where "status='ok'" get name >null
-	') do for %%g in (%%~G) do (
-		net user %%~g Cyb3rPatr!0t$
+	set "NEWPWD=Cyb3rPatr!0t$"
+
+	for /f "skip=1 tokens=*" %%G in ('wmic useraccount where "status='OK'" get name ^| findstr /r /v "^$"') do (
+    	REM exclude built-in/system accounts -- add or remove names as needed
+    	if /I NOT "%%G"=="Administrator" if /I NOT "%%G"=="Guest" if /I NOT "%%G"=="DefaultAccount" (
+        echo "changing password for" "%%G"
+        net user "%%G" "%NEWPWD%"
+    	)
 		)
-	endlocal
-	setlocal enabledelayedexpansion	
+
 	pause
 	goto :menu
-	
+
 :disUser
 	cls
 	net users
@@ -141,6 +142,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	net accounts /maxpwage:60
 	net accounts /minpwage:10
 	net accounts /uniquepw:3
+	echo CHECK TO SEE IF "Password must meet complexity requirements" IS ENABLED
 	
 	pause
 	goto :menu
@@ -238,11 +240,11 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	rem Logon message text
 	set /p body=Please enter logon text: 
-		reg ADD "HKLM\SYSTEM\microsoft\Windwos\CurrentVersion\Policies\System\legalnoticetext" /v LegalNoticeText /t REG_SZ /d "%body%"
+		reg ADD "HKLM\SYSTEM\microsoft\Windows\CurrentVersion\Policies\System\legalnoticetext" /v LegalNoticeText /t REG_SZ /d "%body%" /f
 	
 	rem Logon message title bar
 	set /p subject=Please enter the title of the message: 
-		reg ADD "HKLM\SYSTEM\microsoft\Windwos\CurrentVersion\Policies\System\legalnoticecaption" /v LegalNoticeCaption /t REG_SZ /d "%subject%"
+		reg ADD "HKLM\SYSTEM\microsoft\Windows\CurrentVersion\Policies\System\legalnoticecaption" /v LegalNoticeCaption /t REG_SZ /d "%subject%" /f
 	
 	rem Wipe page file from shutdown
 	reg ADD "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v ClearPageFileAtShutdown /t REG_DWORD /d 1 /f
