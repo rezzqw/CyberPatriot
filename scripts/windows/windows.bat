@@ -178,8 +178,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo Creating list of media files in %temp%\mediafiles.txt
 	echo.
 	
-	rem Search C: drive for common media file extensions
-	dir /s /b C:\*.mp3 C:\*.mp4 C:\*.avi C:\*.mkv C:\*.mov C:\*.wmv C:\*.flv C:\*.wav C:\*.flac C:\*.aac C:\*.m4a C:\*.wma C:\*.ogg C:\*.webm C:\*.mpeg C:\*.mpg 2>nul > %temp%\mediafiles.txt
+	rem Search C: drive for mp3 and mp4 files
+	dir /s /b C:\*.mp3 C:\*.mp4 2>nul > %temp%\mediafiles.txt
 	
 	if %errorlevel%==0 (
 		echo Media files found! Opening list...
