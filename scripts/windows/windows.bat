@@ -1,3 +1,5 @@
+lusrmgr.msc
+secpol.msc
 @echo off
 setlocal enabledelayedexpansion
 net session
@@ -28,7 +30,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo "5)Disable guest/admin		6)Set password policy
 	echo "7)Set lockout policy		8)Enable Firewall"
 	echo "9)Search for media files	10)Disable services
-	echo "			                 12)remote Desktop Config
+	echo "11)Delete Users             12)remote Desktop Config
 	echo "13)Enable auto update		14)Security options"
 	echo "15)Audit the machine		16)Edit groups"
 	echo "69)Exit				70)Reboot"
@@ -44,7 +46,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		if "%answer%"=="8" goto :firewall
 		if "%answer%"=="9" goto :badFiles
 		if "%answer%"=="10" goto :services
-		if "%answer%"=="11" goto :UAC
+		if "%answer%"=="11" goto :delUser
 		if "%answer%"=="12" goto :remDesk
 		if "%answer%"=="13" goto :autoUpdate
 		if "%answer%"=="14" goto :secOpt
@@ -68,15 +70,13 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :passwd
 	echo Changing all user passwords
 	
-	set "NEWPWD=Cyb3rPatr!0t$"
-
-	for /f "skip=1 tokens=*" %%G in ('wmic useraccount where "status='OK'" get name ^| findstr /r /v "^$"') do (
-    	REM exclude built-in/system accounts -- add or remove names as needed
-    	if /I NOT "%%G"=="Administrator" if /I NOT "%%G"=="Guest" if /I NOT "%%G"=="DefaultAccount" (
-        echo "changing password for" "%%G"
-        net user "%%G" "%NEWPWD%"
-    	)
+	for /f "tokens=1" %%G in ('net user ^| findstr /v "^User" ^| findstr /v "^--" ^| findstr /v "^The command"') do (
+		set "USERNAME=%%G"
+		if /I NOT "!USERNAME!"=="Administrator" if /I NOT "!USERNAME!"=="Guest" if /I NOT "!USERNAME!"=="DefaultAccount" if /I NOT "!USERNAME!"=="" (
+			echo Changing password for !USERNAME!
+			net user "!USERNAME!" "Cyb3rPatr!0t$"
 		)
+	)
 
 	pause
 	goto :menu
@@ -84,7 +84,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :disUser
 	cls
 	net users
-	set /p answer=Would you like to delete a user?[y/n]: 
+	set /p answer=Would you like to disable a user?[y/n]: 
 	if /I "%answer%"=="y" (
 		cls
 		net users
@@ -99,17 +99,21 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	goto :menu
 	
 :createUser
-	set /p answer=Would you like to create a user?[y/n]: 
-	if /I "%answer%"=="y" (
-		set /p NAME=What is the user you would like to create?:
+	set /p NAME=What is the user you would like to create?:
+	set "PASS="
+	set /p PASS=Enter a password for the user (password complexity requirements must be disabled): 
+	if "!PASS!"==" " (
 		net user !NAME! /add
-		echo !NAME! has been added
-		pause 
-		goto :createUser
-	) 
-	if /I "%answer%"=="n" (
-		goto :menu
+	) else (
+		net user !NAME! !PASS! /add
 	)
+	echo !NAME! has been added
+	pause 
+
+	set /p answer=Do you want to create another user?[y/n]: 
+    if /I "%answer%"=="y" goto :createUser
+    if /I "%answer%"=="n" goto :menu
+	goto :menu
 
 :disGueAdm
 	rem Disables the guest account
@@ -209,6 +213,25 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	sc config HomeGroupListener start= disabled
 	
 	pause
+	goto :menu
+
+:delUser
+	cls
+	net users
+	set /p answer=Would you like to delete a user?[y/n]: 
+	if /I "%answer%"=="n" goto :menu
+	if /I NOT "%answer%"=="y" goto :menu
+	
+	cls
+	net users
+	set /p DELUSER=What is the name of the user to delete?: 
+	net user !DELUSER! /delete
+	echo !DELUSER! has been deleted
+	pause
+	
+	set /p answer=Do you want to delete another user?[y/n]: 
+	if /I "%answer%"=="y" goto :delUser
+	if /I "%answer%"=="n" goto :menu
 	goto :menu
 
 :remDesk
