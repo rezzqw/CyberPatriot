@@ -173,6 +173,40 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	goto :menu
 	
 :badFiles
+	echo Scanning for media files...
+	echo.
+	echo Creating list of media files in %temp%\mediafiles.txt
+	echo.
+	
+	rem Search C: drive for common media file extensions
+	dir /s /b C:\*.mp3 C:\*.mp4 C:\*.avi C:\*.mkv C:\*.mov C:\*.wmv C:\*.flv C:\*.wav C:\*.flac C:\*.aac C:\*.m4a C:\*.wma C:\*.ogg C:\*.webm C:\*.mpeg C:\*.mpg 2>nul > %temp%\mediafiles.txt
+	
+	if %errorlevel%==0 (
+		echo Media files found! Opening list...
+		notepad %temp%\mediafiles.txt
+		echo.
+		set /p answer=Do you want to delete these files?[y/n]: 
+		if /I "!answer!"=="y" (
+			echo Deleting media files...
+			for /f "delims=" %%F in (%temp%\mediafiles.txt) do (
+				del /f "%%F" 2>nul
+				if !errorlevel!==0 (
+					echo Deleted: %%F
+				) else (
+					echo Failed to delete: %%F
+				)
+			)
+			echo.
+			echo Media file deletion complete.
+		) else (
+			echo Media files were not deleted.
+		)
+	) else (
+		echo No media files found.
+	)
+	
+	del %temp%\mediafiles.txt 2>nul
+	pause
 	goto :menu
 
 :services
