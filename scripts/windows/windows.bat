@@ -58,7 +58,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 
 :userProp
 	echo Setting password never expires
-	wmic UserAccount set PasswordExpires=True
+	wmic UserAccount set PasswordExpires=False
 	wmic UserAccount set PasswordChangeable=True
 	wmic UserAccount set PasswordRequired=True
 
@@ -215,13 +215,13 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 
 :delUser
 	cls
-	net users
+	net user
 	set /p answer=Would you like to delete a user?[y/n]: 
 	if /I "%answer%"=="n" goto :menu
 	if /I NOT "%answer%"=="y" goto :menu
 	
 	cls
-	net users
+	net user
 	set /p DELUSER=What is the name of the user to delete?: 
 	net user !DELUSER! /delete
 	echo !DELUSER! has been deleted
