@@ -1,5 +1,3 @@
-lusrmgr.msc
-secpol.msc
 @echo off
 setlocal enabledelayedexpansion
 net session
