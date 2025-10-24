@@ -22,7 +22,6 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 :menu
 	cls
-	echo "~~~~~~~~~~~~~~~~~~~~~Written by: Quinn Wood~~~~~~~~~~~~~~~~~~~~~~"
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	echo "1)Set user properties		2)Create a user"
 	echo "3)Disable a user		4)Change all passwords"
