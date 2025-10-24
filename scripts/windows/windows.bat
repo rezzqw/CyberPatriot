@@ -352,7 +352,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	net localgroup
 	set /p grp=What group would you like to check?:
 	net localgroup !grp!
-	set /p answer=Is there a user you would like to add or remove?[add/remove/back]:
+	set /p answer=Is there a user you would like to add or remove?[add/remove/back/n]:
 	if "%answer%"=="add" (
 		set /p userAdd=Please enter the user you would like to add: 
 		net localgroup !grp! !userAdd! /add
@@ -365,6 +365,9 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	)
 	if "%answer%"=="back" (
 		goto :group
+	)
+	if "%answer%"=="n" (
+		goto :menu
 	)
 
 	set /p answer=Would you like to go check again?[y/n]
