@@ -1,0 +1,29 @@
+CYBER PATRIOT SCRIPTS AND CHECKLIST
+!DISCLAIMER!:
+1. read the README in your image FIRST
+2. then answer the forensic Questions
+3. THEN FINALLY RUN SCRIPTS
+4. then go thru the checklist #1 for your OS
+5. once done scim thru the checklist #2 to see if you missed anything
+
+
+Checklists
+
+1.Linux Checklist
+
+    Basic checklist to harden a linux server.
+
+2.Windows Checklist
+
+    Basic checklist to harden a windows operating system.
+
+Scripts
+
+1.Linux_Ubuntu.sh
+
+    Script that is written to do everything in the checklist plus more.
+    Script not perfected, still requires a lot of work.
+
+2.Windows.bat
+
+    Script that does basic securing, checklist is still needed to fully harden the system.

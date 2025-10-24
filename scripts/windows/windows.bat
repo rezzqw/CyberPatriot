@@ -29,7 +29,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo "5)Disable guest/admin		6)Set password policy
 	echo "7)Set lockout policy		8)Enable Firewall"
 	echo "9)Search for media files	10)Disable services
-	echo "11)Turn on UAC			12)remote Desktop Config
+	echo "			                 12)remote Desktop Config
 	echo "13)Enable auto update		14)Security options"
 	echo "15)Audit the machine		16)Edit groups"
 	echo "69)Exit				70)Reboot"
@@ -138,7 +138,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	rem Sets the password policy
 	rem Set complexity requirments
 	echo Setting pasword policies
-	net accounts /minpwlen:8
+	net accounts /minpwlen:12
 	net accounts /maxpwage:60
 	net accounts /minpwage:10
 	net accounts /uniquepw:3
@@ -150,7 +150,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	rem Sets the lockout policy
 	echo Setting the lockout policy
 	net accounts /lockoutduration:30
-	net accounts /lockoutthreshold:3
+	net accounts /lockoutthreshold:5
 	net accounts /lockoutwindow:30
 
 	pause
@@ -201,13 +201,6 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	sc config HomeGroupProvider start= disabled
 	sc stop HomeGroupListener
 	sc config HomeGroupListener start= disabled
-	
-	pause
-	goto :menu
-:UAC
-
-	rem Enable UAC
-	echo Turning on UAC has to be done manually.
 	
 	pause
 	goto :menu
