@@ -66,16 +66,38 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	goto :menu
 
 :passwd
-	echo Changing all user passwords
+	echo Changing all user passwords (except current user)
+	echo.
 	
-	for /f "tokens=1" %%G in ('net user ^| findstr /v "^User" ^| findstr /v "^--" ^| findstr /v "^The command"') do (
-		set "USERNAME=%%G"
-		if /I NOT "!USERNAME!"=="Administrator" if /I NOT "!USERNAME!"=="Guest" if /I NOT "!USERNAME!"=="DefaultAccount" if /I NOT "!USERNAME!"=="" (
-			echo Changing password for !USERNAME!
-			net user "!USERNAME!" "Cyb3rPatr!0t$"
+	rem Get current username
+	set CURRENTUSER=%USERNAME%
+	echo Current user: %CURRENTUSER% (will be skipped)
+	echo.
+	
+	rem Parse all usernames (net user shows 3 columns)
+	for /f "tokens=1,2,3" %%A in ('net user ^| findstr /v "User accounts" ^| findstr /v "^--" ^| findstr /v "^The command" ^| findstr /v "completed successfully"') do (
+		if NOT "%%A"=="" (
+			if /I NOT "%%A"=="Administrator" if /I NOT "%%A"=="Guest" if /I NOT "%%A"=="DefaultAccount" if /I NOT "%%A"=="%CURRENTUSER%" (
+				echo Changing password for %%A
+				net user "%%A" "CyberPatriot2024@"
+			)
+		)
+		if NOT "%%B"=="" (
+			if /I NOT "%%B"=="Administrator" if /I NOT "%%B"=="Guest" if /I NOT "%%B"=="DefaultAccount" if /I NOT "%%B"=="%CURRENTUSER%" (
+				echo Changing password for %%B
+				net user "%%B" "CyberPatriot2024@"
+			)
+		)
+		if NOT "%%C"=="" (
+			if /I NOT "%%C"=="Administrator" if /I NOT "%%C"=="Guest" if /I NOT "%%C"=="DefaultAccount" if /I NOT "%%C"=="%CURRENTUSER%" (
+				echo Changing password for %%C
+				net user "%%C" "CyberPatriot2024@"
+			)
 		)
 	)
-
+	
+	echo.
+	echo Password changes complete.
 	pause
 	goto :menu
 

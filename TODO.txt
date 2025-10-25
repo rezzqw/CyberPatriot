@@ -1,6 +1,6 @@
-*List for manufacturing the script*
+!List for manufacturing the script!
 
 
-1.Make function 9 work
-2.Make function 4 work
+1.Make function 9 work *check*
+2.Make function 4 work 
 3.Check the checklist to add features to the Script

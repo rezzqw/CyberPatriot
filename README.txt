@@ -1,4 +1,5 @@
 CYBER PATRIOT SCRIPTS AND CHECKLIST
+
 !DISCLAIMER!:
 1. read the README in your image FIRST
 2. then answer the forensic Questions
@@ -6,9 +7,13 @@ CYBER PATRIOT SCRIPTS AND CHECKLIST
 4. then go thru the checklist #1 for your OS
 5. once done scim thru the checklist #2 to see if you missed anything
 
+
+Stuff:
 lusrmgr.msc
 secpol.msc
-Cyb3rPatr!0t$
+CyberPatriot2024@
+
+
 
 Checklists
 
@@ -30,4 +35,4 @@ Scripts
 2.Windows.bat
 
     Script that does basic securing, checklist is still needed to fully harden the system.
-    *Changing all passwords* (Number 4) makes the new password Cyb3rPatr!0t$
+    *Changing all passwords* (Number 4) makes the new password for every user CyberPatriot2024@ EXCEPT THE CURRENT USER LOGGED IN
