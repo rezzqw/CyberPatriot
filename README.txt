@@ -17,13 +17,15 @@ CyberPatriot2024@
 
 Checklists
 
-1.Linux Checklist
+1.Linux Checklists
 
-    Basic checklist to harden a linux server.
+    Checklist 1. Basic checklist to harden a linux server.
+    Checklist 2. More in dept checklist to find other issues in a linux server.
 
-2.Windows Checklist
+2.Windows Checklists
 
-    Basic checklist to harden a windows operating system.
+    Checklist 1. Basic checklist to harden a windows operating system.
+    Checklist 2. More in dept checklist to find other issues in a windows operating system
 
 Scripts
 
