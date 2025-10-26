@@ -24,14 +24,14 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	cls
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	echo "1)Set user properties		2)Create a user"
-	echo "3)Disable a user		4)Change all passwords"
+	echo "3)Disable a user		    4)Change all passwords"
 	echo "5)Disable guest/admin		6)Set password policy"
 	echo "7)Set lockout policy		8)Enable Firewall"
 	echo "9)Search for media files	10)Disable services"
-	echo "11)Delete Users             12)remote Desktop Config"
+	echo "11)Delete Users           12)remote Desktop Config"
 	echo "13)Enable auto update		14)Security options"
 	echo "15)Audit the machine		16)Edit groups"
-	echo "69)Exit				70)Reboot"
+	echo "69)Exit				    70)Reboot"
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	set /p answer=Please choose an option: 
 		if "%answer%"=="1" goto :userProp
