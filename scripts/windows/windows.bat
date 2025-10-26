@@ -119,7 +119,11 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	goto :menu
 	
 :createUser
-	set /p NAME=What is the user you would like to create?:
+	cls
+	echo current users on the system:
+	net users
+	set /p NAME=What is the user you would like to create?(If not Yype "n"):
+	if /I "%NAME%"=="n" goto :menu
 	set "PASS="
 	set /p PASS=Enter a password for the user (password complexity requirements must be disabled): 
 	if "!PASS!"==" " (
