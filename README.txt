@@ -37,4 +37,4 @@ Scripts
 2.Windows.bat
 
     Script that does basic securing, checklist is still needed to fully harden the system.
-    *Changing all passwords* (Number 4) makes the new password for every user CyberPatriot2024@ EXCEPT THE CURRENT USER LOGGED IN
+    *Changing all passwords* (User Management) makes the new password for every user CyberPatriot2024@ EXCEPT THE CURRENT USER LOGGED IN

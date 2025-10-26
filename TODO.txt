@@ -2,5 +2,15 @@
 
 
 
-1. Make account policy one section
-2. Make Local Policies one section 
+!Things that have to be done manually!(Seen on checklist):
+a. User rights Assignment
+b. shares
+c. sessions
+d. task Mananger
+e. task scheduler
+f. Updating powershell
+g. uninstalling unnessary apps
+h. Updating neccessary programs (Readme)
+i. Configuring browser settings
+j.Downloading malware detection and deleting malicious files
+k.Local group Policy Editor
