@@ -504,9 +504,52 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	goto :servicesManagement
 
 :disableCommonServices
-	echo Disabling common unnecessary services...
+	cls
+	echo ============== DISABLE COMMON SERVICES ==============
+	echo.
+	echo The following services will be disabled:
+	echo.
+	echo Remote Desktop Services:
+	echo   - TermService (Remote Desktop)
+	echo   - SessionEnv (Remote Desktop Configuration)
+	echo   - UmRdpService (Remote Desktop UserMode Port Redirector)
+	echo   - RpcSs (Remote Procedure Call)
+	echo.
+	echo File Transfer:
+	echo   - ftpsvc (FTP Server)
+	echo.
+	echo Remote Access:
+	echo   - TlntSvr (Telnet Server)
+	echo   - RemoteRegistry (Remote Registry)
+	echo   - RemoteAccess (Routing and Remote Access)
+	echo.
+	echo Network Services:
+	echo   - SNMP (SNMP Service)
+	echo   - SNMPTRAP (SNMP Trap)
+	echo   - SSDPSRV (SSDP Discovery)
+	echo   - upnphost (UPnP Device Host)
+	echo.
+	echo Other Services:
+	echo   - SharedAccess (Internet Connection Sharing)
+	echo   - W3SVC (World Wide Web Publishing Service)
+	echo   - TapiSrv (Telephony)
+	echo   - iprip (RIP Listener)
+	echo   - HomeGroupProvider
+	echo   - HomeGroupListener
+	echo   - BDESVC (BitLocker Drive Encryption)
 	echo.
 	echo NOTE: Check the README for any critical services before disabling!
+	echo.
+	set /p confirm=Do you want to disable all these services?[y/n]: 
+	
+	if /I NOT "%confirm%"=="y" (
+		echo Operation cancelled.
+		pause
+		goto :servicesManagement
+	)
+	
+	echo.
+	echo Disabling services...
 	echo.
 	
 	rem Common services to disable from checklist
@@ -658,9 +701,37 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	goto :windowsFeatures
 
 :removeCommonFeatures
-	echo Removing common unnecessary Windows features...
+	cls
+	echo ============== REMOVE COMMON FEATURES ==============
 	echo.
-	echo This will remove: FTP, Simple TCP/IP Services, Telnet Client, SMB 1.x
+	echo The following Windows features will be REMOVED:
+	echo.
+	echo Network Protocols:
+	echo   - SMB 1.0/CIFS File Sharing Support (security vulnerability)
+	echo   - Telnet Client
+	echo   - TFTP Client
+	echo   - Simple TCP/IP Services
+	echo.
+	echo Server Features:
+	echo   - FTP Server (IIS)
+	echo.
+	echo Legacy Features:
+	echo   - PowerShell 2.0 (outdated and insecure)
+	echo   - Work Folders Client
+	echo.
+	echo WARNING: These features will be permanently removed!
+	echo.
+	set /p confirm=Do you want to remove all these features?[y/n]: 
+	
+	if /I NOT "%confirm%"=="y" (
+		echo Operation cancelled.
+		pause
+		goto :windowsFeatures
+	)
+	
+	echo.
+	echo Removing features...
+	echo This may take a few minutes...
 	echo.
 	
 	rem Disable SMB 1.0
