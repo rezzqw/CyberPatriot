@@ -172,7 +172,24 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	pause
 	goto :menu
 
+:disableGuest
+	echo Disabling Guest account...
+	echo.
+	
+	rem Check if Guest account is already disabled
+	net user Guest | findstr /C:"Account active" | findstr /C:"No"
+	if %errorlevel%==0 (
+		echo Guest account is already disabled.
+	) else (
+		net user Guest /active:no
+		echo Guest account has been disabled.
+	)
+	
+	echo.
+	pause
+	goto :menu
 
+	
 :userManagement
 	cls
 	echo "============== USER MANAGEMENT =============="
