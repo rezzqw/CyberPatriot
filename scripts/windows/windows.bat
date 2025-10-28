@@ -1286,7 +1286,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo.
 	
 	rem Search C: drive for all prohibited media file types
-	dir /s /b C:\*.png C:\*.jpg C:\*.gif C:\*.mp3 C:\*.mp4 C:\*.mov 2>nul > %temp%\mediafiles.txt
+	dir /s /b C:\Users\*.png C:\Users\*.jpg C:\Users\*.gif C:\Users\*.mp3 C:\Users\*.mp4 C:\Users\*.mov 2>nul > %temp%\mediafiles.txt
 	
 	 rem Check if any files were found
 	for %%A in (%temp%\mediafiles.txt) do set filesize=%%~zA
