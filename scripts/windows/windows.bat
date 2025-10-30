@@ -215,20 +215,50 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	goto :userManagement
 
 :userProp
-	echo Setting user properties...
+	echo Setting user properties for ALL users...
 	echo.
 	echo Configuring:
-	echo - User must change password at next logon
+	echo - User must change password at next logon (except admin accounts)
 	echo - User CAN change password
 	echo - Password DOES expire
+	echo - Password IS required
 	echo - Account is NOT disabled
+	echo - Account is NOT locked out
 	echo.
 	
+	rem Set global properties via WMIC (applies to all users)
 	wmic UserAccount set PasswordExpires=True
 	wmic UserAccount set PasswordChangeable=True
 	wmic UserAccount set PasswordRequired=True
 	
-	echo User properties set successfully!
+	echo.
+	echo Setting "User must change password at next logon" for each user...
+	echo.
+	
+	rem Set "User must change password at next logon" for each user (except admins)
+	for /f "tokens=1,2,3" %%A in ('net user ^| findstr /v "User accounts" ^| findstr /v "^--" ^| findstr /v "^The command" ^| findstr /v "completed successfully"') do (
+		if NOT "%%A"=="" (
+			if /I NOT "%%A"=="Administrator" if /I NOT "%%A"=="Guest" if /I NOT "%%A"=="DefaultAccount" (
+				echo Setting properties for %%A
+				net user "%%A" /logonpasswordchg:yes 2>nul
+			)
+		)
+		if NOT "%%B"=="" (
+			if /I NOT "%%B"=="Administrator" if /I NOT "%%B"=="Guest" if /I NOT "%%B"=="DefaultAccount" (
+				echo Setting properties for %%B
+				net user "%%B" /logonpasswordchg:yes 2>nul
+			)
+		)
+		if NOT "%%C"=="" (
+			if /I NOT "%%C"=="Administrator" if /I NOT "%%C"=="Guest" if /I NOT "%%C"=="DefaultAccount" (
+				echo Setting properties for %%C
+				net user "%%C" /logonpasswordchg:yes 2>nul
+			)
+		)
+	)
+	
+	echo.
+	echo User properties set successfully for all users!
 	pause
 	goto :userManagement
 
