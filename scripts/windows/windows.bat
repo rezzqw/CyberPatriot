@@ -55,8 +55,10 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		rem password complexity
 		if "%answer%"=="69" exit
 		if "%answer%"=="70" shutdown /r
+	
+	echo Invalid option. Please try again.
 	pause
-
+	goto :menu
 
 :accountPolicies
 	echo Configuring Account Policies...
