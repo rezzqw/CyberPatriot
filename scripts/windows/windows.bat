@@ -1353,4 +1353,86 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	del %temp%\mediafiles.txt 2>nul
 	pause
 	goto :menu
+
+	:scanHiddenFiles
+	echo "============== HIDDEN & SUSPICIOUS FILES SCANNER =============="
+	echo.
+	echo WARNING: Review carefully before deleting!
+	echo Some system files are hidden for a reason.
+	echo.
+	echo Scanning for:
+	echo - Hidden files in user directories
+	echo - Suspicious file types (.zip, .rar, .7z, .exe, .bat, .vbs, .ps1)
+	echo.
+	
+	set /p answer=Continue with scan?[y/n]: 
+	if /I NOT "%answer%"=="y" goto :menu
+	
+	echo.
+	echo Scanning... This may take a moment.
+	echo.
+	
+	rem Search for hidden files and suspicious types in user directories
+	echo Searching C:\Users\ for hidden and suspicious files...
+	dir /s /b /a:h C:\Users\*.zip C:\Users\*.rar C:\Users\*.7z C:\Users\*.exe C:\Users\*.bat C:\Users\*.vbs C:\Users\*.ps1 C:\Users\*.cmd 2>nul > %temp%\hiddenfiles.txt
+	
+	rem Also search for hidden files with common extensions in Downloads
+	dir /s /b /a:h C:\Users\*\Downloads\* 2>nul >> %temp%\hiddenfiles.txt
+	
+	rem Check if any files were found
+	for %%A in (%temp%\hiddenfiles.txt) do set filesize=%%~zA
+	if %filesize% GTR 0 (
+		echo.
+		echo Hidden/suspicious files found! Opening list...
+		start notepad %temp%\hiddenfiles.txt
+		echo.
+		echo Please review the list in Notepad.
+		echo.
+		echo "Options:"
+		echo "1) Delete all files in the list"
+		echo "2) Unhide files (remove hidden attribute)"
+		echo "3) Do nothing"
+		echo.
+		set /p choice=Select an option [1/2/3]: 
+		
+		if "%choice%"=="1" (
+			echo.
+			echo Deleting files...
+			for /f "delims=" %%F in (%temp%\hiddenfiles.txt) do (
+				del /f /a:h "%%F" 2>nul
+				if !errorlevel!==0 (
+					echo Deleted: %%F
+				) else (
+					echo Failed to delete: %%F
+				)
+			)
+			echo.
+			echo File deletion complete.
+		)
+		
+		if "%choice%"=="2" (
+			echo.
+			echo Unhiding files...
+			for /f "delims=" %%F in (%temp%\hiddenfiles.txt) do (
+				attrib -h "%%F" 2>nul
+				if !errorlevel!==0 (
+					echo Unhidden: %%F
+				) else (
+					echo Failed to unhide: %%F
+				)
+			)
+			echo.
+			echo Files have been unhidden.
+		)
+		
+		if "%choice%"=="3" (
+			echo No action taken.
+		)
+	) else (
+		echo No hidden or suspicious files found in user directories.
+	)
+	
+	del %temp%\hiddenfiles.txt 2>nul
+	pause
+	goto :menu
 endlocal
