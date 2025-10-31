@@ -32,6 +32,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo "11)Disable Auto Play      12)Enable Firewall & Config"
 	echo "13)Windows Updates/Auto   14)Detect and delete Prohibited Files"
 	echo "15)RDP & RPC Config  		16)Disable IPv6"
+	echo "17)Hidden File Scanner"
 	echo "69)Exit				    70)Reboot"
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	set /p answer=Please choose an option: 
@@ -51,6 +52,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		if "%answer%"=="14" goto :badFiles
 		if "%answer%"=="15" goto :rpcRdpEncryption
 		if "%answer%"=="16" goto :disableIPv6
+		if "%answer%"=="17" goto :scanHiddenFiles
 		rem turn on screensaver
 		rem password complexity
 		if "%answer%"=="69" exit
