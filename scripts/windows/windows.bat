@@ -36,6 +36,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo "19)Startup Management     20)Scheuduled Tasks Management"
 	echo "21)Windows Defender Menu  22)Powershell check"
 	echo "23)Security Checks        24)Network checks(ports&stuff)"
+	echo "25)Exploit/Script Scan    26)Server Hardening"
 	echo "69)Exit				    70)Reboot"
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	set /p answer=Please choose an option: 
@@ -63,6 +64,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		if "%answer%"=="22" goto :powershellCheck
 		if "%answer%"=="23" goto :criticalChecks
 		if "%answer%"=="24" goto :networkSecurity
+		if "%answer%"=="25" goto :exploitScanner
+		if "%answer%"=="26" goto :serverHardening
 		rem turn on screensaver
 		rem password complexity
 		if "%answer%"=="69" exit
@@ -83,9 +86,9 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	net accounts /minpwage:3
 	net accounts /uniquepw:24
 	
-	rem Enable password complexity requirements
+	rem Enable password complexity and disable reversible encryption
 	secedit /export /cfg %temp%\secpol.cfg
-	(echo [Unicode]&echo Unicode=yes&echo [System Access]&echo PasswordComplexity = 1&echo PasswordHistorySize = 24&echo [Version]&echo signature="$CHICAGO$"&echo Revision=1) > %temp%\secpol.cfg
+	(echo [Unicode]&echo Unicode=yes&echo [System Access]&echo PasswordComplexity = 1&echo PasswordHistorySize = 24&echo ClearTextPassword = 0&echo [Version]&echo signature="$CHICAGO$"&echo Revision=1) > %temp%\secpol.cfg
 	secedit /configure /db %windir%\security\local.sdb /cfg %temp%\secpol.cfg /areas SECURITYPOLICY
 	del %temp%\secpol.cfg
 	
@@ -132,9 +135,18 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	rem MS Network Server - Digitally sign communications
 	reg ADD HKLM\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters /v enablesecuritysignature /t REG_DWORD /d 1 /f
+	reg ADD HKLM\SYSTEM\CurrentControlSet\services\LanmanServer\Parameters /v requiresecuritysignature /t REG_DWORD /d 1 /f
 	
-	rem MS network client - Digitally sign communications (disabled per checklist)
-	reg ADD HKLM\SYSTEM\CurrentControlSet\services\LanmanWorkstation\Parameters /v EnableSecuritySignature /t REG_DWORD /d 0 /f
+	rem MS network client - Digitally sign communications (ALWAYS - ENABLED)
+	reg ADD HKLM\SYSTEM\CurrentControlSet\services\LanmanWorkstation\Parameters /v EnableSecuritySignature /t REG_DWORD /d 1 /f
+	reg ADD HKLM\SYSTEM\CurrentControlSet\services\LanmanWorkstation\Parameters /v RequireSecuritySignature /t REG_DWORD /d 1 /f
+	
+	rem Disable reversible encryption for passwords
+	reg ADD "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v ClearTextPassword /t REG_DWORD /d 0 /f
+	
+	rem Disable WinRM unencrypted traffic
+	reg ADD "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Client" /v AllowUnencryptedTraffic /t REG_DWORD /d 0 /f
+	reg ADD "HKLM\SOFTWARE\Policies\Microsoft\Windows\WinRM\Service" /v AllowUnencryptedTraffic /t REG_DWORD /d 0 /f
 	
 	rem Network Access
 	reg ADD HKLM\SYSTEM\CurrentControlSet\Control\Lsa /v restrictanonymous /t REG_DWORD /d 1 /f
@@ -599,7 +611,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	if /I "!confirm!"=="y" (
 		net share "!sharename!" /delete
-		if !errorlevel!==0 (
+		if %errorlevel%==0 (
 			echo Share "!sharename!" has been removed!
 		) else (
 			echo Failed to remove share "!sharename!"
@@ -1458,7 +1470,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 			echo Deleting media files...
 			for /f "delims=" %%F in (%temp%\mediafiles.txt) do (
 				del /f "%%F" 2>nul
-				if !errorlevel!==0 (
+				if %errorlevel%==0 (
 					echo Deleted: %%F
 				) else (
 					echo Failed to delete: %%F
@@ -1523,7 +1535,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 			echo Deleting files...
 			for /f "delims=" %%F in (%temp%\hiddenfiles.txt) do (
 				del /f /a:h "%%F" 2>nul
-				if !errorlevel!==0 (
+				if %errorlevel%==0 (
 					echo Deleted: %%F
 				) else (
 					echo Failed to delete: %%F
@@ -1538,7 +1550,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 			echo Unhiding files...
 			for /f "delims=" %%F in (%temp%\hiddenfiles.txt) do (
 				attrib -h "%%F" 2>nul
-				if !errorlevel!==0 (
+				if %errorlevel%==0 (
 					echo Unhidden: %%F
 				) else (
 					echo Failed to unhide: %%F
@@ -1668,7 +1680,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	set /p confirm=Are you sure you want to delete "!valueName!" from !regPath!? [y/n]: 
 	if /I "!confirm!"=="y" (
 		reg delete "!regPath!" /v "!valueName!" /f
-		if !errorlevel!==0 (
+		if %errorlevel%==0 (
 			echo Successfully deleted !valueName!
 		) else (
 			echo Failed to delete !valueName!. It may not exist or you lack permissions.
@@ -1691,7 +1703,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo [All Users Startup Folder]
 	if exist "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup" (
 		dir /b "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup" 2>nul
-		if !errorlevel!==1 echo (Empty)
+		if %errorlevel%==1 echo (Empty)
 	) else (
 		echo (Folder not found)
 	)
@@ -1700,7 +1712,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo [Current User Startup Folder]
 	if exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup" (
 		dir /b "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup" 2>nul
-		if !errorlevel!==1 echo (Empty)
+		if %errorlevel%==1 echo (Empty)
 	) else (
 		echo (Folder not found)
 	)
@@ -1783,7 +1795,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo.
 	schtasks /query /tn "!taskName!" /fo LIST /v
 	
-	if !errorlevel! NEQ 0 (
+	if %errorlevel% NEQ 0 (
 		echo.
 		echo Task not found. Make sure you entered the exact name.
 	)
@@ -1808,7 +1820,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo.
 	schtasks /query /tn "!taskName!" /fo LIST 2>nul
 	
-	if !errorlevel! NEQ 0 (
+	if %errorlevel% NEQ 0 (
 		echo Task not found.
 		pause
 		goto :taskSchedulerCleanup
@@ -1818,7 +1830,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	set /p confirm=Are you SURE you want to delete this task? [y/n]: 
 	if /I "!confirm!"=="y" (
 		schtasks /delete /tn "!taskName!" /f
-		if !errorlevel!==0 (
+		if %errorlevel%==0 (
 			echo Task deleted successfully!
 		) else (
 			echo Failed to delete task. Check permissions or task name.
@@ -1847,7 +1859,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo.
 	schtasks /query /tn "!taskName!" /fo LIST 2>nul
 	
-	if !errorlevel! NEQ 0 (
+	if %errorlevel% NEQ 0 (
 		echo Task not found.
 		pause
 		goto :taskSchedulerCleanup
@@ -1857,7 +1869,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	set /p confirm=Disable this task? [y/n]: 
 	if /I "!confirm!"=="y" (
 		schtasks /change /tn "!taskName!" /disable
-		if !errorlevel!==0 (
+		if %errorlevel%==0 (
 			echo Task disabled successfully!
 		) else (
 			echo Failed to disable task. Check permissions or task name.
@@ -1922,7 +1934,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	rem Remove DisableAntiSpyware registry key if it exists
 	reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /f 2>nul
-	if !errorlevel!==0 (
+	if %errorlevel%==0 (
 		echo Removed DisableAntiSpyware policy.
 	) else (
 		echo DisableAntiSpyware policy not found (already enabled).
@@ -1934,7 +1946,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	sc config WinDefend start= auto
 	net start WinDefend 2>nul
 	
-	if !errorlevel!==0 (
+	if %errorlevel%==0 (
 		echo Windows Defender service started.
 	) else (
 		echo Windows Defender service may already be running.
@@ -1955,7 +1967,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	rem Update definitions using PowerShell
 	powershell -Command "Update-MpSignature"
 	
-	if !errorlevel!==0 (
+	if %errorlevel%==0 (
 		echo.
 		echo Defender definitions updated successfully!
 	) else (
@@ -2010,7 +2022,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	rem Enable real-time monitoring
 	powershell -Command "Set-MpPreference -DisableRealtimeMonitoring $false"
 	
-	if !errorlevel!==0 (
+	if %errorlevel%==0 (
 		echo Real-time protection enabled!
 	) else (
 		echo Failed to enable real-time protection. May require manual configuration.
@@ -2389,7 +2401,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	set /p confirm=Are you sure you want to disable "!adapterName!"? [y/n]: 
 	if /I "!confirm!"=="y" (
 		powershell -Command "Disable-NetAdapter -Name '!adapterName!' -Confirm:$false"
-		if !errorlevel!==0 (
+		if %errorlevel%==0 (
 			echo Adapter disabled successfully!
 		) else (
 			echo Failed to disable adapter. Check the name and try again.
@@ -2458,4 +2470,193 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	pause
 	goto :networkSecurity
+
+:exploitScanner
+	echo "============== EXPLOIT SCRIPT SCANNER =============="
+	echo.
+	echo Scanning for common exploit scripts and hacking tools...
+	echo.
+	
+	set FOUND=0
+	
+	rem Scan for shellshock exploits
+	echo [1/5] Scanning for shellshock exploits...
+	dir /s /b C:\Users\*shellshock* 2>nul > %temp%\exploits.txt
+	for %%A in (%temp%\exploits.txt) do set /a FOUND+=1
+	
+	rem Scan for metasploit
+	echo [2/5] Scanning for Metasploit...
+	dir /s /b C:\Users\*metasploit* C:\Users\*msfconsole* 2>nul >> %temp%\exploits.txt
+	
+	rem Scan for common exploit file extensions
+	echo [3/5] Scanning for exploit scripts (.py, .rb, .sh with exploit in name)...
+	dir /s /b C:\Users\*exploit*.py C:\Users\*exploit*.rb C:\Users\*exploit*.sh 2>nul >> %temp%\exploits.txt
+	
+	rem Scan for hacking tools
+	echo [4/5] Scanning for hacking tools...
+	dir /s /b C:\Users\*nmap* C:\Users\*wireshark* C:\Users\*burp* C:\Users\*sqlmap* 2>nul >> %temp%\exploits.txt
+	
+	rem Scan for keyloggers and backdoors
+	echo [5/5] Scanning for keyloggers and backdoors...
+	dir /s /b C:\Users\*keylog* C:\Users\*backdoor* C:\Users\*rootkit* 2>nul >> %temp%\exploits.txt
+	
+	echo.
+	
+	for %%A in (%temp%\exploits.txt) do set filesize=%%~zA
+	if %filesize% GTR 0 (
+		echo WARNING: Potential exploit scripts/hacking tools found!
+		echo.
+		start notepad %temp%\exploits.txt
+		echo.
+		echo Review the list in Notepad. Common exploits:
+		echo - shellshock-exploit.py
+		echo - Any files with "exploit" in the name
+		echo - Metasploit framework files
+		echo.
+		set /p delete=Delete all found exploit scripts? [y/n]: 
+		if /I "!delete!"=="y" (
+			echo.
+			echo Deleting exploit scripts...
+			for /f "delims=" %%F in (%temp%\exploits.txt) do (
+				del /f /q "%%F" 2>nul
+				if %errorlevel%==0 (
+					echo Deleted: %%F
+				) else (
+					echo Failed: %%F
+				)
+			)
+			echo.
+			echo Deletion complete.
+		) else (
+			echo Files not deleted.
+		)
+	) else (
+		echo No exploit scripts found.
+	)
+	
+	del %temp%\exploits.txt 2>nul
+	pause
+	goto :menu
+
+:serverHardening
+	echo "============== SERVER HARDENING =============="
+	echo.
+	echo This checks and hardens common server applications.
+	echo.
+	echo "1) Harden Apache HTTP Server"
+	echo "2) Harden IIS (Internet Information Services)"
+	echo "3) Harden FTP Server"
+	echo "4) Back to main menu"
+	echo.
+	set /p choice=Select an option: 
+	
+	if "%choice%"=="1" goto :hardenApache
+	if "%choice%"=="2" goto :hardenIIS
+	if "%choice%"=="3" goto :hardenFTP
+	if "%choice%"=="4" goto :menu
+	
+	echo Invalid option.
+	pause
+	goto :serverHardening
+
+:hardenApache
+	echo "============== APACHE HARDENING =============="
+	echo.
+	echo Checking for Apache installation...
+	echo.
+	
+	if exist "C:\Apache24\conf\httpd.conf" (
+		echo Apache found at C:\Apache24
+		echo.
+		echo Recommended security settings:
+		echo - ServerSignature Off
+		echo - ServerTokens Prod
+		echo - TraceEnable Off
+		echo.
+		set /p auto=Automatically apply these settings? [y/n]: 
+		
+		if /I "!auto!"=="y" (
+			echo.
+			echo Backing up httpd.conf...
+			copy "C:\Apache24\conf\httpd.conf" "C:\Apache24\conf\httpd.conf.backup" >nul
+			
+			echo Applying security settings...
+			powershell -Command "(Get-Content 'C:\Apache24\conf\httpd.conf') -replace 'ServerSignature On', 'ServerSignature Off' | Set-Content 'C:\Apache24\conf\httpd.conf'"
+			powershell -Command "(Get-Content 'C:\Apache24\conf\httpd.conf') -replace 'ServerTokens Full', 'ServerTokens Prod' | Set-Content 'C:\Apache24\conf\httpd.conf'"
+			
+			echo.
+			echo Apache hardened! Restart Apache for changes to take effect.
+		) else (
+			echo.
+			echo Opening httpd.conf in Notepad...
+			echo.
+			echo Manually change:
+			echo - ServerSignature On  TO  ServerSignature Off
+			echo - ServerTokens Full   TO  ServerTokens Prod
+			echo.
+			start notepad "C:\Apache24\conf\httpd.conf"
+		)
+	) else if exist "C:\Program Files\Apache\conf\httpd.conf" (
+		echo Apache found at C:\Program Files\Apache
+		echo Please manually edit: C:\Program Files\Apache\conf\httpd.conf
+		echo Set ServerSignature Off and ServerTokens Prod
+		start notepad "C:\Program Files\Apache\conf\httpd.conf"
+	) else (
+		echo Apache not found in common locations.
+		echo If Apache is installed, manually locate httpd.conf and set:
+		echo - ServerSignature Off
+		echo - ServerTokens Prod
+	)
+	
+	pause
+	goto :serverHardening
+
+:hardenIIS
+	echo "============== IIS HARDENING =============="
+	echo.
+	echo Checking for IIS installation...
+	echo.
+	
+	sc query W3SVC >nul 2>&1
+	if %errorlevel%==0 (
+		echo IIS detected.
+		echo.
+		echo Opening IIS Manager...
+		echo.
+		echo Recommended manual steps:
+		echo 1. Remove unused IIS features
+		echo 2. Disable directory browsing
+		echo 3. Enable request filtering
+		echo 4. Set custom error pages
+		echo 5. Disable WebDAV if not needed
+		echo.
+		pause
+		inetmgr
+	) else (
+		echo IIS not installed or not running.
+	)
+	
+	pause
+	goto :serverHardening
+
+:hardenFTP
+	echo "============== FTP SERVER HARDENING =============="
+	echo.
+	echo Recommended: Disable FTP entirely if not required!
+	 echo.
+	echo FTP transmits credentials in plaintext.
+	echo Consider using SFTP (SSH File Transfer Protocol) instead.
+	echo.
+	set /p disable=Disable FTP service? [y/n]: 
+	
+	if /I "!disable!"=="y" (
+		sc stop ftpsvc
+		sc config ftpsvc start= disabled
+		echo FTP service disabled!
+	) else (
+		echo FTP service left enabled.
+	)
+	
+	pause
+	goto :serverHardening
 endlocal
