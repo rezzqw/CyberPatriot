@@ -34,7 +34,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo "15)Media file Detect      16)RPC and RDP Configuration"
 	echo "17)Disable IPv6           18)Scan for Hidden Files"
 	echo "19)Startup Management     20)Scheuduled Tasks Management"
-	echo "21)Windows Defender       22)"
+	echo "21)Windows Defender Menu  22)Powershell check"
+	echo "23)Security Checks        24)Network checks(ports&stuff)"
 	echo "69)Exit				    70)Reboot"
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	set /p answer=Please choose an option: 
@@ -59,6 +60,9 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		if "%answer%"=="19" goto :startupManagement
 		if "%answer%"=="20" goto :taskSchedulerCleanup
 		if "%answer%"=="21" goto :windowsSecurityConfig
+		if "%answer%"=="22" goto :powershellCheck
+		if "%answer%"=="23" goto :criticalChecks
+		if "%answer%"=="24" goto :networkSecurity
 		rem turn on screensaver
 		rem password complexity
 		if "%answer%"=="69" exit
@@ -343,8 +347,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	pause 
 
 	set /p answer=Do you want to create another user?[y/n]: 
-    if /I "%answer%"=="y" goto :createUser
-    if /I "%answer%"=="n" goto :userManagement
+	if /I "%answer%"=="y" goto :createUser
+	if /I "%answer%"=="n" goto :userManagement
 	goto :userManagement
 
 :delUser
@@ -650,7 +654,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	if "%choice%"=="4" goto :viewServiceStatus
 	if "%choice%"=="5" goto :menu
 	
-	echo "Invalid option. Please try again.""
+	echo "Invalid option. Please try again."
 	pause
 	goto :servicesManagement
 
@@ -1125,7 +1129,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo.
 	echo "1) Enable and configure firewall (recommended settings)"
 	echo "2) Block specific ports"
-	echo "3) Open Windows Defender Firewall Advanced Security""
+	echo "3) Open Windows Defender Firewall Advanced Security"
 	echo "4) Back to main menu"
 	echo.
 	set /p choice=Select an option: 
