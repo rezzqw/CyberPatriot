@@ -26,13 +26,15 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	echo "1)Account Policies		2)Local Policies"
 	echo "3)Disable the Guest	    4)User management(New Menu)"
-	echo "5)Group management   		6)Services Mangement"
-	echo "7)Windows Features 		8)Remote Desktop Configuration"
-	echo "9)ScreenSaver Config  	10)User Account Control"
-	echo "11)Disable Auto Play      12)Enable Firewall & Config"
-	echo "13)Windows Updates/Auto   14)Detect and delete Prohibited Files"
-	echo "15)RDP & RPC Config  		16)Disable IPv6"
-	echo "17)Hidden File Scanner"
+	echo "5)Group management   		6)File Share Mangement"
+	echo "7)Service Mangement 		8)Windows Features"
+	echo "9)Remote Desktop Config  	10)Screensaver config"
+	echo "11)User Account Control   12)Disable AutoPlay"
+	echo "13)Firewall Config        14)Windows Updates/Auto"
+	echo "15)Media file Detect      16)RPC and RDP Configuration"
+	echo "17)Disable IPv6           18)Scan for Hidden Files"
+	echo "19)Startup Management     20)Scheuduled Tasks Management"
+	echo "21)Windows Defender       22)"
 	echo "69)Exit				    70)Reboot"
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	set /p answer=Please choose an option: 
@@ -41,18 +43,22 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		if "%answer%"=="3" goto :disableGuest
 		if "%answer%"=="4" goto :userManagement
 		if "%answer%"=="5" goto :groupManagement
-		if "%answer%"=="6" goto :servicesManagement
-		if "%answer%"=="7" goto :windowsFeatures
-		if "%answer%"=="8" goto :remDesk
-		if "%answer%"=="9" goto :screensaver
-		if "%answer%"=="10" goto :uacConfig
-		if "%answer%"=="11" goto :autoPlayConfig
-		if "%answer%"=="12" goto :firewallConfig
-		if "%answer%"=="13" goto :autoUpdate
-		if "%answer%"=="14" goto :badFiles
-		if "%answer%"=="15" goto :rpcRdpEncryption
-		if "%answer%"=="16" goto :disableIPv6
-		if "%answer%"=="17" goto :scanHiddenFiles
+		if "%answer%"=="6" goto :fileSharesManagement
+		if "%answer%"=="7" goto :servicesManagement
+		if "%answer%"=="8" goto :windowsFeatures
+		if "%answer%"=="9" goto :remDesk
+		if "%answer%"=="10" goto :screensaver
+		if "%answer%"=="11" goto :uacConfig
+		if "%answer%"=="12" goto :autoPlayConfig
+		if "%answer%"=="13" goto :firewallConfig
+		if "%answer%"=="14" goto :autoUpdate
+		if "%answer%"=="15" goto :badFiles
+		if "%answer%"=="16" goto :rpcRdpEncryption
+		if "%answer%"=="17" goto :disableIPv6
+		if "%answer%"=="18" goto :scanHiddenFiles
+		if "%answer%"=="19" goto :startupManagement
+		if "%answer%"=="20" goto :taskSchedulerCleanup
+		if "%answer%"=="21" goto :windowsSecurityConfig
 		rem turn on screensaver
 		rem password complexity
 		if "%answer%"=="69" exit
@@ -357,10 +363,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	set /p answer=Do you want to delete another user?[y/n]: 
 	if /I "%answer%"=="y" goto :delUser
-	if /I "%answer%"=="n" goto :userManagement
 	goto :userManagement
-
-
 
 :groupManagement
 	cls
@@ -513,6 +516,120 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	if /I "%answer%"=="y" goto :deleteGroup
 	goto :groupManagement
 
+
+
+:fileSharesManagement
+	cls
+	echo "============== FILE SHARES MANAGEMENT =============="
+	echo.
+	echo "1) View current shares"
+	echo "2) Remove unauthorized shares"
+	echo "3) Disconnect all sessions"
+	echo "4) Back to main menu"
+	echo.
+	set /p choice=Select an option: 
+	
+	if "%choice%"=="1" goto :viewShares
+	if "%choice%"=="2" goto :removeShares
+	if "%choice%"=="3" goto :disconnectSessions
+	if "%choice%"=="4" goto :menu
+	
+	echo Invalid option. Please try again.
+	pause
+	goto :fileSharesManagement
+
+:viewShares
+	cls
+	echo "============== CURRENT SHARES =============="
+	echo.
+	echo Mandatory shares (DO NOT remove):
+	echo - ADMIN$
+	echo - C$
+	echo - IPC$
+	echo - Any shares ending with $
+	echo.
+	echo Current shares on this system:
+	net share
+	echo.
+	pause
+	goto :fileSharesManagement
+
+:removeShares
+	cls
+	echo "============== REMOVE UNAUTHORIZED SHARES =============="
+	echo.
+	echo WARNING: Only remove shares that are NOT mandatory!
+	echo.
+	echo Mandatory shares (DO NOT remove):
+	echo - ADMIN$
+	echo - C$
+	echo - IPC$
+	echo - Any shares ending with $
+	echo.
+	echo Current shares:
+	net share
+	echo.
+	set /p sharename=Enter the share name to remove (or 'back' to cancel): 
+	
+	if /I "!sharename!"=="back" goto :fileSharesManagement
+	
+	rem Check if it's a mandatory share
+	if /I "!sharename!"=="ADMIN$" (
+		echo ERROR: Cannot remove ADMIN$ - this is a mandatory share!
+		pause
+		goto :removeShares
+	)
+	if /I "!sharename!"=="C$" (
+		echo ERROR: Cannot remove C$ - this is a mandatory share!
+		pause
+		goto :removeShares
+	)
+	if /I "!sharename!"=="IPC$" (
+		echo ERROR: Cannot remove IPC$ - this is a mandatory share!
+		pause
+		goto :removeShares
+	)
+	
+	echo.
+	set /p confirm=Are you sure you want to remove share "!sharename!"?[y/n]: 
+	
+	if /I "!confirm!"=="y" (
+		net share "!sharename!" /delete
+		if !errorlevel!==0 (
+			echo Share "!sharename!" has been removed!
+		) else (
+			echo Failed to remove share "!sharename!"
+		)
+	) else (
+		echo Removal cancelled.
+	)
+	
+	echo.
+	set /p answer=Remove another share?[y/n]: 
+	if /I "!answer!"=="y" goto :removeShares
+	goto :fileSharesManagement
+
+:disconnectSessions
+	echo "============== DISCONNECT ALL SESSIONS =============="
+	echo.
+	echo This will disconnect all active sessions to shared folders.
+	echo.
+	set /p confirm=Are you sure you want to disconnect all sessions?[y/n]: 
+	
+	if /I "!confirm!"=="y" (
+		echo.
+		echo Disconnecting all sessions...
+		for /f "skip=1 tokens=2" %%s in ('net session') do (
+			net session %%s /delete 2>nul
+		)
+		echo.
+		echo All sessions have been disconnected.
+	) else (
+		echo Operation cancelled.
+	)
+	
+	pause
+	goto :fileSharesManagement
 
 
 :servicesManagement
@@ -1003,7 +1120,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	pause
 	goto :menu
 
-	:firewallConfig
+:firewallConfig
 	echo "============== FIREWALL CONFIGURATION =============="
 	echo.
 	echo "1) Enable and configure firewall (recommended settings)"
@@ -1437,4 +1554,500 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	del %temp%\hiddenfiles.txt 2>nul
 	pause
 	goto :menu
+
+:startupManagement
+	echo "============== STARTUP ITEMS MANAGEMENT =============="
+	echo.
+	echo This will help you identify and disable unauthorized startup items.
+	echo.
+	echo "1) View Startup Programs (Task Manager method)"
+	echo "2) View Registry Startup Items (Run/RunOnce)"
+	echo "3) Disable startup item via registry"
+	echo "4) View Startup Folder contents"
+	echo "5) Back to main menu"
+	echo.
+	set /p choice=Select an option: 
+	
+	if "%choice%"=="1" goto :viewStartupTaskMgr
+	if "%choice%"=="2" goto :viewRegistryStartup
+	if "%choice%"=="3" goto :disableRegistryStartup
+	if "%choice%"=="4" goto :viewStartupFolder
+	if "%choice%"=="5" goto :menu
+	
+	echo "Invalid option. Please try again."
+	pause
+	goto :startupManagement
+
+:viewStartupTaskMgr
+	echo "============== STARTUP PROGRAMS (Task Manager) =============="
+	echo.
+	echo Opening Task Manager to Startup tab...
+	echo.
+	echo NOTE: You can manually disable items from the Startup tab.
+	echo Look for suspicious or unauthorized programs.
+	echo.
+	pause
+	
+	rem Open Task Manager (will need manual navigation to Startup tab)
+	taskmgr.exe
+	
+	echo.
+	echo Task Manager opened. Navigate to the "Startup" tab to manage items.
+	pause
+	goto :startupManagement
+
+:viewRegistryStartup
+	echo "============== REGISTRY STARTUP ITEMS =============="
+	echo.
+	echo Checking common startup registry locations...
+	echo.
+	
+	echo [HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run]
+	reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" 2>nul
+	echo.
+	
+	echo [HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce]
+	reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" 2>nul
+	echo.
+	
+	echo [HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run]
+	reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" 2>nul
+	echo.
+	
+	echo [HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce]
+	reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" 2>nul
+	echo.
+	
+	echo Review the above entries. Look for suspicious programs.
+	pause
+	goto :startupManagement
+
+:disableRegistryStartup
+	echo "============== DISABLE REGISTRY STARTUP ITEM =============="
+	echo.
+	echo WARNING: Only remove entries you are certain are unauthorized!
+	echo.
+	echo "Common startup locations:"
+	echo "1) HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+	echo "2) HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+	echo "3) HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+	echo "4) HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
+	echo.
+	
+	set /p location=Enter location number [1-4] or 'cancel' to go back: 
+	if /I "!location!"=="cancel" goto :startupManagement
+	
+	if "!location!"=="1" set regPath=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+	if "!location!"=="2" set regPath=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+	if "!location!"=="3" set regPath=HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+	if "!location!"=="4" set regPath=HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+	
+	if not defined regPath (
+		echo Invalid selection.
+		pause
+		goto :disableRegistryStartup
+	)
+	
+	echo.
+	echo Current entries in !regPath!:
+	reg query "!regPath!" 2>nul
+	echo.
+	
+	set /p valueName=Enter the VALUE NAME to delete (exact name): 
+	if "!valueName!"=="" (
+		echo No value name provided.
+		pause
+		goto :startupManagement
+	)
+	
+	echo.
+	set /p confirm=Are you sure you want to delete "!valueName!" from !regPath!? [y/n]: 
+	if /I "!confirm!"=="y" (
+		reg delete "!regPath!" /v "!valueName!" /f
+		if !errorlevel!==0 (
+			echo Successfully deleted !valueName!
+		) else (
+			echo Failed to delete !valueName!. It may not exist or you lack permissions.
+		)
+	) else (
+		echo Deletion cancelled.
+	)
+	
+	echo.
+	set /p another=Delete another startup item? [y/n]: 
+	if /I "!another!"=="y" goto :disableRegistryStartup
+	goto :startupManagement
+
+:viewStartupFolder
+	echo "============== STARTUP FOLDER CONTENTS =============="
+	echo.
+	echo Checking startup folders...
+	echo.
+	
+	echo [All Users Startup Folder]
+	if exist "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup" (
+		dir /b "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup" 2>nul
+		if !errorlevel!==1 echo (Empty)
+	) else (
+		echo (Folder not found)
+	)
+	echo.
+	
+	echo [Current User Startup Folder]
+	if exist "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup" (
+		dir /b "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup" 2>nul
+		if !errorlevel!==1 echo (Empty)
+	) else (
+		echo (Folder not found)
+	)
+	echo.
+	
+	echo To remove an item, manually delete it from the startup folder.
+	echo.
+	set /p open=Open startup folders in Explorer? [y/n]: 
+	if /I "!open!"=="y" (
+		start "" "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
+		start "" "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+	)
+	
+	pause
+	goto :startupManagement
+
+:taskSchedulerCleanup
+	echo "============== TASK SCHEDULER CLEANUP =============="
+	echo.
+	echo This will help identify and remove suspicious scheduled tasks.
+	echo.
+	echo "1) List all scheduled tasks"
+	echo "2) View task details"
+	echo "3) Delete a scheduled task"
+	echo "4) Disable a scheduled task"
+	echo "5) Open Task Scheduler GUI"
+	echo "6) Back to main menu"
+	echo.
+	set /p choice=Select an option: 
+	
+	if "%choice%"=="1" goto :listScheduledTasks
+	if "%choice%"=="2" goto :viewTaskDetails
+	if "%choice%"=="3" goto :deleteScheduledTask
+	if "%choice%"=="4" goto :disableScheduledTask
+	if "%choice%"=="5" goto :openTaskScheduler
+	if "%choice%"=="6" goto :menu
+	
+	echo "Invalid option. Please try again."
+	pause
+	goto :taskSchedulerCleanup
+
+:listScheduledTasks
+	echo "============== ALL SCHEDULED TASKS =============="
+	echo.
+	echo Listing all scheduled tasks (this may take a moment)...
+	echo.
+	
+	rem List tasks with their state
+	schtasks /query /fo LIST /v > %temp%\tasks.txt
+	
+	echo Tasks saved to %temp%\tasks.txt
+	echo Opening in Notepad for review...
+	echo.
+	echo Look for:
+	echo - Tasks you don't recognize
+	echo - Tasks pointing to suspicious executables
+	echo - Tasks running from TEMP or user directories
+	echo - Tasks with suspicious names or authors
+	echo.
+	
+	start notepad %temp%\tasks.txt
+	pause
+	
+	del %temp%\tasks.txt 2>nul
+	goto :taskSchedulerCleanup
+
+:viewTaskDetails
+	echo "============== VIEW TASK DETAILS =============="
+	echo.
+	echo Enter the exact task name to view details.
+	echo TIP: Use option 1 first to see all task names.
+	echo.
+	
+	set /p taskName=Enter task name (or 'cancel' to go back): 
+	if /I "!taskName!"=="cancel" goto :taskSchedulerCleanup
+	if "!taskName!"==" " goto :taskSchedulerCleanup
+	
+	echo.
+	echo Details for task: !taskName!
+	echo.
+	schtasks /query /tn "!taskName!" /fo LIST /v
+	
+	if !errorlevel! NEQ 0 (
+		echo.
+		echo Task not found. Make sure you entered the exact name.
+	)
+	
+	echo.
+	pause
+	goto :taskSchedulerCleanup
+
+:deleteScheduledTask
+	echo "============== DELETE SCHEDULED TASK =============="
+	echo.
+	echo WARNING: Only delete tasks you are certain are unauthorized!
+	echo System tasks are necessary for Windows to function properly.
+	echo.
+	
+	set /p taskName=Enter task name to delete (or 'cancel' to go back): 
+	if /I "!taskName!"=="cancel" goto :taskSchedulerCleanup
+	if "!taskName!"==" " goto :taskSchedulerCleanup
+	
+	echo.
+	echo Task to delete: !taskName!
+	echo.
+	schtasks /query /tn "!taskName!" /fo LIST 2>nul
+	
+	if !errorlevel! NEQ 0 (
+		echo Task not found.
+		pause
+		goto :taskSchedulerCleanup
+	)
+	
+	echo.
+	set /p confirm=Are you SURE you want to delete this task? [y/n]: 
+	if /I "!confirm!"=="y" (
+		schtasks /delete /tn "!taskName!" /f
+		if !errorlevel!==0 (
+			echo Task deleted successfully!
+		) else (
+			echo Failed to delete task. Check permissions or task name.
+		)
+	) else (
+		echo Deletion cancelled.
+	)
+	
+	echo.
+	set /p another=Delete another task? [y/n]: 
+	if /I "!another!"=="y" goto :deleteScheduledTask
+	goto :taskSchedulerCleanup
+
+:disableScheduledTask
+	echo "============== DISABLE SCHEDULED TASK =============="
+	echo.
+	echo This will disable a task without deleting it.
+	echo.
+	
+	set /p taskName=Enter task name to disable (or 'cancel' to go back): 
+	if /I "!taskName!"=="cancel" goto :taskSchedulerCleanup
+	if "!taskName!"==" " goto :taskSchedulerCleanup
+	
+	echo.
+	echo Task to disable: !taskName!
+	echo.
+	schtasks /query /tn "!taskName!" /fo LIST 2>nul
+	
+	if !errorlevel! NEQ 0 (
+		echo Task not found.
+		pause
+		goto :taskSchedulerCleanup
+	)
+	
+	echo.
+	set /p confirm=Disable this task? [y/n]: 
+	if /I "!confirm!"=="y" (
+		schtasks /change /tn "!taskName!" /disable
+		if !errorlevel!==0 (
+			echo Task disabled successfully!
+		) else (
+			echo Failed to disable task. Check permissions or task name.
+		)
+	) else (
+		echo Action cancelled.
+	)
+	
+	echo.
+	set /p another=Disable another task? [y/n]: 
+	if /I "!another!"=="y" goto :disableScheduledTask
+	goto :taskSchedulerCleanup
+
+:openTaskScheduler
+	echo "============== OPEN TASK SCHEDULER GUI =============="
+	echo.
+	echo Opening Task Scheduler...
+	echo.
+	echo You can manually review and manage tasks from the GUI.
+	echo.
+	
+	taskschd.msc
+	
+	echo Task Scheduler opened.
+	pause
+	goto :taskSchedulerCleanup
+
+:windowsSecurityConfig
+	echo "============== WINDOWS DEFENDER & SECURITY =============="
+	echo.
+	echo This will enable and configure Windows security features.
+	echo.
+	echo "1) Enable Windows Defender"
+	echo "2) Update Windows Defender definitions"
+	echo "3) Run quick scan"
+	echo "4) Run full scan"
+	echo "5) Enable Real-time Protection"
+	echo "6) Check Windows Security status"
+	echo "7) Open Windows Security Center"
+	echo "8) Back to main menu"
+	echo.
+	set /p choice=Select an option: 
+	
+	if "%choice%"=="1" goto :enableDefender
+	if "%choice%"=="2" goto :updateDefender
+	if "%choice%"=="3" goto :quickScan
+	if "%choice%"=="4" goto :fullScan
+	if "%choice%"=="5" goto :enableRealTimeProtection
+	if "%choice%"=="6" goto :checkSecurityStatus
+	if "%choice%"=="7" goto :openSecurityCenter
+	if "%choice%"=="8" goto :menu
+	
+	echo "Invalid option. Please try again."
+	pause
+	goto :windowsSecurityConfig
+
+:enableDefender
+	echo "============== ENABLE WINDOWS DEFENDER =============="
+	echo.
+	echo Enabling Windows Defender via registry and services...
+	echo.
+	
+	rem Remove DisableAntiSpyware registry key if it exists
+	reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /f 2>nul
+	if !errorlevel!==0 (
+		echo Removed DisableAntiSpyware policy.
+	) else (
+		echo DisableAntiSpyware policy not found (already enabled).
+	)
+	
+	rem Enable Windows Defender service
+	echo.
+	echo Enabling Windows Defender service...
+	sc config WinDefend start= auto
+	net start WinDefend 2>nul
+	
+	if !errorlevel!==0 (
+		echo Windows Defender service started.
+	) else (
+		echo Windows Defender service may already be running.
+	)
+	
+	echo.
+	echo Windows Defender enabled!
+	pause
+	goto :windowsSecurityConfig
+
+:updateDefender
+	echo "============== UPDATE DEFENDER DEFINITIONS =============="
+	echo.
+	echo Updating Windows Defender virus definitions...
+	echo This may take a few moments.
+	echo.
+	
+	rem Update definitions using PowerShell
+	powershell -Command "Update-MpSignature"
+	
+	if !errorlevel!==0 (
+		echo.
+		echo Defender definitions updated successfully!
+	) else (
+		echo.
+		echo Failed to update definitions. Check your internet connection.
+	)
+	
+	pause
+	goto :windowsSecurityConfig
+
+:quickScan
+	echo "============== WINDOWS DEFENDER QUICK SCAN =============="
+	echo.
+	echo Starting a quick scan...
+	echo This will scan common malware locations.
+	echo.
+	
+	powershell -Command "Start-MpScan -ScanType QuickScan"
+	
+	echo.
+	echo Quick scan completed. Check Windows Security for results.
+	pause
+	goto :windowsSecurityConfig
+
+:fullScan
+	echo "============== WINDOWS DEFENDER FULL SCAN =============="
+	echo.
+	echo WARNING: A full scan can take a long time (30+ minutes).
+	echo.
+	set /p confirm=Start full scan? [y/n]: 
+	
+	if /I "!confirm!"=="y" (
+		echo.
+		echo Starting full scan...
+		echo.
+		powershell -Command "Start-MpScan -ScanType FullScan"
+		echo.
+		echo Full scan completed. Check Windows Security for results.
+	) else (
+		echo Scan cancelled.
+	)
+	
+	pause
+	goto :windowsSecurityConfig
+
+:enableRealTimeProtection
+	echo "============== ENABLE REAL-TIME PROTECTION =============="
+	echo.
+	echo Enabling Real-time Protection...
+	echo.
+	
+	rem Enable real-time monitoring
+	powershell -Command "Set-MpPreference -DisableRealtimeMonitoring $false"
+	
+	if !errorlevel!==0 (
+		echo Real-time protection enabled!
+	) else (
+		echo Failed to enable real-time protection. May require manual configuration.
+	)
+	
+	echo.
+	echo Enabling other protection features...
+	powershell -Command "Set-MpPreference -DisableBehaviorMonitoring $false"
+	powershell -Command "Set-MpPreference -DisableIOAVProtection $false"
+	powershell -Command "Set-MpPreference -DisableScriptScanning $false"
+	
+	echo.
+	echo Protection features configured!
+	pause
+	goto :windowsSecurityConfig
+
+:checkSecurityStatus
+	echo "============== WINDOWS SECURITY STATUS =============="
+	echo.
+	echo Checking Windows Defender status...
+	echo.
+	
+	powershell -Command "Get-MpComputerStatus | Select-Object AntivirusEnabled, RealTimeProtectionEnabled, IoavProtectionEnabled, BehaviorMonitorEnabled, AntivirusSignatureLastUpdated | Format-List"
+	
+	echo.
+	echo Checking Windows Defender service status...
+	sc query WinDefend | findstr "STATE"
+	
+	echo.
+	pause
+	goto :windowsSecurityConfig
+
+:openSecurityCenter
+	echo "============== OPEN WINDOWS SECURITY CENTER =============="
+	echo.
+	echo Opening Windows Security Center...
+	echo.
+	
+	start windowsdefender:
+	
+	echo Windows Security opened.
+	pause
+	goto :windowsSecurityConfig
 endlocal
