@@ -2050,4 +2050,408 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo Windows Security opened.
 	pause
 	goto :windowsSecurityConfig
+
+:powershellCheck
+	echo "============== POWERSHELL VERSION CHECK =============="
+	echo.
+	echo Checking PowerShell version...
+	echo.
+	
+	rem Display PowerShell version
+	powershell -Command "$PSVersionTable.PSVersion | Format-List"
+	
+	echo.
+	echo Recommended: PowerShell 5.1 or higher for Windows 10/11
+	echo.
+	echo If your version is outdated:
+	echo - Windows 10/11: Update via Windows Update
+	echo - Windows 7/8: Install Windows Management Framework 5.1
+	echo.
+	
+	set /p install=Would you like to check for Windows Updates now? [y/n]: 
+	if /I "!install!"=="y" (
+		echo.
+		echo Opening Windows Update...
+		start ms-settings:windowsupdate
+	)
+	
+	pause
+	goto :menu
+
+:criticalChecks
+	echo "============== CRITICAL SECURITY CHECKS =============="
+	echo.
+	echo Running comprehensive security checks...
+	echo.
+	echo "1) Check for missing critical updates"
+	echo "2) Verify system file integrity (SFC)"
+	echo "3) Check disk health (CHKDSK)"
+	echo "4) Review event logs for security issues"
+	echo "5) Check for rootkits (basic)"
+	echo "6) Run all checks (recommended)"
+	echo "7) Back to main menu"
+	echo.
+	set /p choice=Select an option: 
+	
+	if "%choice%"=="1" goto :checkUpdates
+	if "%choice%"=="2" goto :runSFC
+	if "%choice%"=="3" goto :runCHKDSK
+	if "%choice%"=="4" goto :reviewEventLogs
+	if "%choice%"=="5" goto :rootkitCheck
+	if "%choice%"=="6" goto :runAllChecks
+	if "%choice%"=="7" goto :menu
+	
+	echo "Invalid option. Please try again."
+	pause
+	goto :criticalChecks
+
+:checkUpdates
+	echo "============== CHECK FOR UPDATES =============="
+	echo.
+	echo Checking Windows Update status...
+	echo.
+	
+	powershell -Command "Get-HotFix | Sort-Object -Property InstalledOn -Descending | Select-Object -First 10 | Format-Table -AutoSize"
+	
+	echo.
+	echo Above are the 10 most recent updates installed.
+	echo.
+	set /p open=Open Windows Update to check for more? [y/n]: 
+	if /I "!open!"=="y" (
+		start ms-settings:windowsupdate
+	)
+	
+	pause
+	goto :criticalChecks
+
+:runSFC
+	echo "============== SYSTEM FILE CHECKER =============="
+	echo.
+	echo Running System File Checker to verify integrity of system files...
+	echo This may take 10-15 minutes.
+	echo.
+	set /p confirm=Start SFC scan? [y/n]: 
+	
+	if /I "!confirm!"=="y" (
+		echo.
+		echo Running SFC /scannow...
+		sfc /scannow
+		echo.
+		echo SFC scan completed. Review results above.
+	) else (
+		echo Scan cancelled.
+	)
+	
+	pause
+	goto :criticalChecks
+
+:runCHKDSK
+	echo "============== CHECK DISK =============="
+	echo.
+	echo CHKDSK scans for disk errors and bad sectors.
+	echo.
+	echo NOTE: Full scan requires a reboot and runs before Windows starts.
+	echo.
+	echo "Options:"
+	echo "1) Quick check (read-only, no reboot)"
+	echo "2) Full scan on next reboot (recommended if issues suspected)"
+	echo "3) Cancel"
+	echo.
+	set /p chkChoice=Select option: 
+	
+	if "!chkChoice!"=="1" (
+		echo.
+		echo Running quick disk check...
+		chkdsk C:
+		echo.
+		echo Quick check completed.
+	) else if "!chkChoice!"=="2" (
+		echo.
+		echo Scheduling full CHKDSK on next reboot...
+		echo Y | chkdsk C: /F /R
+		echo.
+		echo CHKDSK will run on next system reboot.
+		set /p reboot=Reboot now? [y/n]: 
+		if /I "!reboot!"=="y" shutdown /r /t 30
+	) else (
+		echo Cancelled.
+	)
+	
+	pause
+	goto :criticalChecks
+
+:reviewEventLogs
+	echo "============== REVIEW SECURITY EVENT LOGS =============="
+	echo.
+	echo Checking recent security events...
+	echo.
+	
+	echo [Failed Login Attempts]
+	powershell -Command "Get-EventLog -LogName Security -InstanceId 4625 -Newest 10 -ErrorAction SilentlyContinue | Format-Table -AutoSize TimeGenerated, Message"
+	
+	echo.
+	echo [Account Lockouts]
+	powershell -Command "Get-EventLog -LogName Security -InstanceId 4740 -Newest 10 -ErrorAction SilentlyContinue | Format-Table -AutoSize TimeGenerated, Message"
+	
+	echo.
+	echo [System Errors (Critical)]
+	powershell -Command "Get-EventLog -LogName System -EntryType Error -Newest 10 -ErrorAction SilentlyContinue | Format-Table -AutoSize TimeGenerated, Source, Message"
+	
+	echo.
+	set /p openEV=Open Event Viewer for detailed review? [y/n]: 
+	if /I "!openEV!"=="y" eventvwr.msc
+	
+	pause
+	goto :criticalChecks
+
+:rootkitCheck
+	echo "============== BASIC ROOTKIT CHECK =============="
+	echo.
+	echo Checking for common rootkit indicators...
+	echo.
+	
+	echo [Checking for hidden processes]
+	tasklist /SVC
+	
+	echo.
+	echo [Checking for suspicious drivers]
+	driverquery
+	
+	echo.
+	echo NOTE: For thorough rootkit detection, use dedicated tools like:
+	echo - GMER
+	echo - TDSSKiller
+	echo - Malwarebytes Anti-Rootkit
+	echo.
+	
+	pause
+	goto :criticalChecks
+
+:runAllChecks
+	echo "============== RUNNING ALL CHECKS =============="
+	echo.
+	echo This will run all security checks. This may take 30+ minutes.
+	echo.
+	set /p confirmAll=Continue with all checks? [y/n]: 
+	
+	if /I NOT "!confirmAll!"=="y" goto :criticalChecks
+	
+	echo.
+	echo [1/5] Checking Windows Updates...
+	powershell -Command "Get-HotFix | Sort-Object -Property InstalledOn -Descending | Select-Object -First 5"
+	
+	echo.
+	echo [2/5] Running System File Checker...
+	sfc /scannow
+	
+	echo.
+	echo [3/5] Checking disk (read-only)...
+	chkdsk C:
+	
+	echo.
+	echo [4/5] Reviewing security event logs...
+	powershell -Command "Get-EventLog -LogName Security -InstanceId 4625 -Newest 5 -ErrorAction SilentlyContinue | Format-Table TimeGenerated, Message"
+	
+	echo.
+	echo [5/5] Checking for suspicious processes...
+	tasklist /SVC | findstr /I "suspicious malware trojan"
+	
+	echo.
+	echo ========================================
+	echo ALL CHECKS COMPLETED!
+	echo ========================================
+	echo.
+	echo Review the output above for any issues.
+	
+	pause
+	goto :criticalChecks
+
+:networkSecurity
+	echo "============== NETWORK SECURITY CHECKS =============="
+	echo.
+	echo Check and secure network connections and ports.
+	echo.
+	echo "1) Show active network connections"
+	echo "2) Show listening ports"
+	echo "3) Show network adapter configuration"
+	echo "4) Disable unused network adapters"
+	echo "5) Check for open shares"
+	echo "6) Reset TCP/IP stack"
+	echo "7) Back to main menu"
+	echo.
+	set /p choice=Select an option: 
+	
+	if "%choice%"=="1" goto :showConnections
+	if "%choice%"=="2" goto :showListeningPorts
+	if "%choice%"=="3" goto :showNetworkConfig
+	if "%choice%"=="4" goto :disableAdapters
+	if "%choice%"=="5" goto :checkShares
+	if "%choice%"=="6" goto :resetTCPIP
+	if "%choice%"=="7" goto :menu
+	
+	echo "Invalid option. Please try again."
+	pause
+	goto :networkSecurity
+
+:showConnections
+	echo "============== ACTIVE NETWORK CONNECTIONS =============="
+	echo.
+	echo Showing all active network connections...
+	echo.
+	
+	netstat -ano | findstr ESTABLISHED
+	
+	echo.
+	echo Legend: Proto Local-Address Foreign-Address State PID
+	echo.
+	echo Review the foreign addresses. Suspicious connections may indicate:
+	echo - Malware communicating with C2 servers
+	echo - Unauthorized remote access
+	echo - Data exfiltration
+	echo.
+	set /p pid=Enter PID to investigate (or press Enter to skip): 
+	if NOT "!pid!"=="" (
+		echo.
+		echo Process details for PID !pid!:
+		tasklist /FI "PID eq !pid!" /V
+	)
+	
+	pause
+	goto :networkSecurity
+
+:showListeningPorts
+	echo "============== LISTENING PORTS =============="
+	echo.
+	echo Showing all listening ports and associated processes...
+	echo.
+	
+	netstat -ano | findstr LISTENING
+	
+	echo.
+	echo Common legitimate ports:
+	echo - 135, 139, 445: Windows networking (SMB, RPC)
+	echo - 3389: Remote Desktop
+	echo - 80, 443: HTTP/HTTPS (if running web server)
+	echo.
+	echo Investigate any unexpected listening ports!
+	echo.
+	
+	set /p saveList=Save listening ports to file? [y/n]: 
+	if /I "!saveList!"=="y" (
+		netstat -ano | findstr LISTENING > %temp%\listening_ports.txt
+		echo Saved to %temp%\listening_ports.txt
+		start notepad %temp%\listening_ports.txt
+	)
+	
+	pause
+	goto :networkSecurity
+
+:showNetworkConfig
+	echo "============== NETWORK ADAPTER CONFIGURATION =============="
+	echo.
+	echo Displaying network adapter information...
+	echo.
+	
+	ipconfig /all
+	
+	echo.
+	echo Check for:
+	echo - Unexpected IP addresses
+	echo - Unauthorized DNS servers
+	echo - Multiple network adapters (some may be unused)
+	echo.
+	
+	pause
+	goto :networkSecurity
+
+:disableAdapters
+	echo "============== DISABLE UNUSED NETWORK ADAPTERS =============="
+	echo.
+	echo Listing network adapters...
+	echo.
+	
+	powershell -Command "Get-NetAdapter | Format-Table Name, Status, InterfaceDescription"
+	
+	echo.
+	echo WARNING: Only disable adapters you are certain are not in use!
+	echo Disabling the wrong adapter could break network connectivity.
+	echo.
+	
+	set /p adapterName=Enter adapter name to disable (or 'cancel' to go back): 
+	if /I "!adapterName!"=="cancel" goto :networkSecurity
+	if "!adapterName!"=="" goto :networkSecurity
+	
+	echo.
+	set /p confirm=Are you sure you want to disable "!adapterName!"? [y/n]: 
+	if /I "!confirm!"=="y" (
+		powershell -Command "Disable-NetAdapter -Name '!adapterName!' -Confirm:$false"
+		if !errorlevel!==0 (
+			echo Adapter disabled successfully!
+		) else (
+			echo Failed to disable adapter. Check the name and try again.
+		)
+	) else (
+		echo Action cancelled.
+	)
+	
+	pause
+	goto :networkSecurity
+
+:checkShares
+	echo "============== CHECK NETWORK SHARES =============="
+	echo.
+	echo Listing all network shares...
+	echo.
+	
+	net share
+	
+	echo.
+	echo Default Windows shares (usually safe):
+	echo - ADMIN$, C$, IPC$: Administrative shares
+	echo.
+	echo Remove any unauthorized shares immediately!
+	echo.
+	
+	set /p removeShare=Enter share name to remove (or press Enter to skip): 
+	if NOT "!removeShare!"=="" (
+		echo.
+		set /p confirm=Remove share "!removeShare!"? [y/n]: 
+		if /I "!confirm!"=="y" (
+			net share !removeShare! /delete
+			echo Share removed.
+		)
+	)
+	
+	pause
+	goto :networkSecurity
+
+:resetTCPIP
+	echo "============== RESET TCP/IP STACK =============="
+	echo.
+	echo This will reset the TCP/IP stack and Winsock catalog.
+	echo Use this if you suspect network configuration tampering.
+	echo.
+	echo WARNING: This may temporarily disrupt network connectivity.
+	echo.
+	
+	set /p confirm=Proceed with TCP/IP reset? [y/n]: 
+	if /I NOT "!confirm!"=="y" goto :networkSecurity
+	
+	echo.
+	echo Resetting TCP/IP stack...
+	netsh int ip reset
+	
+	echo.
+	echo Resetting Winsock catalog...
+	netsh winsock reset
+	
+	echo.
+	echo TCP/IP stack has been reset!
+	echo.
+	echo A system reboot is recommended for changes to take full effect.
+	set /p reboot=Reboot now? [y/n]: 
+	if /I "!reboot!"=="y" shutdown /r /t 30
+	
+	pause
+	goto :networkSecurity
 endlocal
