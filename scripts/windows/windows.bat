@@ -424,15 +424,18 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo Current groups:
 	net localgroup
 	echo.
-	set /p grp=What group would you like to add a user to? (or type 'back' to cancel): 
+	set /p grp=What group would you like to add users to? (or type 'back' to cancel): 
 	if /I "!grp!"=="back" goto :groupManagement
 	
+:addToGroupLoop
 	echo.
 	echo Current members of !grp!:
 	net localgroup "!grp!"
 	echo.
 	
-	set /p userAdd=Enter the username to add: 
+	set /p userAdd=Enter the username to add (or 'done' to finish): 
+	if /I "!userAdd!"=="done" goto :groupManagement
+	
 	net localgroup "!grp!" "!userAdd!" /add
 	
 	if %errorlevel%==0 (
@@ -441,10 +444,9 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		echo Failed to add !userAdd! to !grp!
 	)
 	
-	pause
-	
-	set /p answer=Add another user to a group?[y/n]: 
-	if /I "%answer%"=="y" goto :addToGroup
+	echo.
+	set /p answer=Add another user to !grp!? [y/n]: 
+	if /I "%answer%"=="y" goto :addToGroupLoop
 	goto :groupManagement
 
 :removeFromGroup
@@ -452,15 +454,18 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo Current groups:
 	net localgroup
 	echo.
-	set /p grp=What group would you like to remove a user from? (or type 'back' to cancel): 
+	set /p grp=What group would you like to remove users from? (or type 'back' to cancel): 
 	if /I "!grp!"=="back" goto :groupManagement
 	
+:removeFromGroupLoop
 	echo.
 	echo Current members of !grp!:
 	net localgroup "!grp!"
 	echo.
 	
-	set /p userRem=Enter the username to remove: 
+	set /p userRem=Enter the username to remove (or 'done' to finish): 
+	if /I "!userRem!"=="done" goto :groupManagement
+	
 	net localgroup "!grp!" "!userRem!" /delete
 	
 	if %errorlevel%==0 (
@@ -469,10 +474,9 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		echo Failed to remove !userRem! from !grp!
 	)
 	
-	pause
-	
-	set /p answer=Remove another user from a group?[y/n]: 
-	if /I "%answer%"=="y" goto :removeFromGroup
+	echo.
+	set /p answer=Remove another user from !grp!? [y/n]: 
+	if /I "%answer%"=="y" goto :removeFromGroupLoop
 	goto :groupManagement
 
 :createGroup
