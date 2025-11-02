@@ -37,6 +37,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo "21)Windows Defender Menu  22)Powershell check"
 	echo "23)Security Checks        24)Network checks(ports&stuff)"
 	echo "25)Exploit/Script Scan    26)Server Hardening"
+	echo "27)Installed Programs     28)"
 	echo "69)Exit				    70)Reboot"
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	set /p answer=Please choose an option: 
@@ -2663,4 +2664,154 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	pause
 	goto :serverHardening
+
+:installedProgramsScanner
+	echo "============== INSTALLED PROGRAMS SCANNER =============="
+	echo.
+	echo Scanning for prohibited and suspicious software...
+	echo.
+	
+	rem Define prohibited program keywords
+	set "PROHIBITED=game torrent wireshark nmap metasploit burp vuln crack hack remote teamviewer anydesk vnc limewire frostwire kazaa ares morpheus emule bitcoin miner keylog spy trojan rat poison ivy netbus subseven"
+	
+	echo Creating list of all installed programs...
+	echo.
+	
+	rem Method 1: Query via WMIC
+	echo [Method 1] Scanning via WMIC...
+	wmic product get name,version /format:csv > %temp%\programs_wmic.txt 2>nul
+	
+	rem Method 2: Query registry (more comprehensive)
+	echo [Method 2] Scanning registry...
+	reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" /s > %temp%\programs_reg.txt 2>nul
+	reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall" /s >> %temp%\programs_reg.txt 2>nul
+	reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" /s >> %temp%\programs_reg.txt 2>nul
+	
+	echo.
+	echo Analyzing for prohibited software...
+	echo.
+	
+	rem Search for prohibited keywords
+	echo Suspicious programs found: > %temp%\suspicious_programs.txt
+	echo. >> %temp%\suspicious_programs.txt
+	
+	for %%K in (%PROHIBITED%) do (
+		findstr /I /C:"%%K" %temp%\programs_reg.txt >> %temp%\suspicious_programs.txt 2>nul
+	)
+	
+	rem Extract DisplayName entries
+	echo. >> %temp%\suspicious_programs.txt
+	echo ========== FULL PROGRAM LIST (DisplayName) ========== >> %temp%\suspicious_programs.txt
+	findstr /I "DisplayName" %temp%\programs_reg.txt >> %temp%\suspicious_programs.txt 2>nul
+	
+	echo.
+	echo Opening results in Notepad...
+	start notepad %temp%\suspicious_programs.txt
+	
+	echo.
+	echo ============================================
+	echo COMMON PROHIBITED PROGRAMS TO LOOK FOR:
+	echo ============================================
+	echo.
+	echo Games:
+	echo - Minecraft, Fortnite, Steam, Origin, Epic Games
+	echo - Solitaire, Minesweeper, Chess, Card games
+	echo.
+	echo P2P / File Sharing:
+	echo - uTorrent, BitTorrent, LimeWire, FrostWire
+	echo - Kazaa, Ares, eMule, Morpheus
+	echo.
+	echo Hacking Tools:
+	echo - Wireshark, Nmap, Metasploit, Burp Suite
+	echo - Cain and Abel, John the Ripper, Aircrack
+	echo.
+	echo Remote Access (unauthorized):
+	echo - TeamViewer, AnyDesk, VNC, LogMeIn
+	echo - Remote Desktop Connection (if not required)
+	echo.
+	echo Media/Entertainment:
+	echo - Spotify, Discord, Skype, iTunes (if prohibited)
+	echo.
+	echo ============================================
+	echo.
+	echo To uninstall a program:
+	echo 1. Option 1: Auto-uninstall (requires EXACT name match)
+	echo 2. Option 2: Open Programs and Features (RECOMMENDED - easier)
+	echo 3. Option 3: Done and return to menu
+	echo.
+	echo NOTE: For most users, Option 2 is faster and easier!
+	echo.
+	
+	set /p action=What would you like to do? [1/2/3]:
+	
+	if "!action!"=="1" goto :uninstallProgram
+	if "!action!"=="2" (
+		echo Opening Programs and Features...
+		appwiz.cpl
+		pause
+		goto :installedProgramsScanner
+	)
+	if "!action!"=="3" (
+		rem Cleanup temp files
+		del %temp%\programs_wmic.txt 2>nul
+		del %temp%\programs_reg.txt 2>nul
+		del %temp%\suspicious_programs.txt 2>nul
+		goto :menu
+	)
+	
+	echo Invalid option.
+	pause
+	goto :installedProgramsScanner
+
+:uninstallProgram
+	echo.
+	echo "============== UNINSTALL PROGRAM =============="
+	echo.
+	echo IMPORTANT: You must type the program name EXACTLY as shown below.
+	echo This includes:
+	echo - Exact capitalization (Wireshark NOT wireshark)
+	echo - All spaces and special characters
+	echo - Version numbers if included (e.g., "Wireshark 4.0.3")
+	echo.
+	echo TIP: Copy the name from the list to avoid typos!
+	echo.
+	echo Listing all installed programs (this may take a moment)...
+	echo.
+	
+	wmic product get name
+	
+	echo.
+	set /p progname=Enter the EXACT program name (or 'back' to cancel):
+	
+	if /I "!progname!"=="back" goto :installedProgramsScanner
+	if "!progname!"=="" goto :uninstallProgram
+	
+	echo.
+	set /p confirm=Are you SURE you want to uninstall "!progname!"? [y/n]: 
+	
+	if /I "!confirm!"=="y" (
+		echo.
+		echo Uninstalling !progname!...
+		echo This may take a few moments...
+		echo.
+		
+		wmic product where "name='!progname!'" call uninstall /nointeractive
+		
+		if %errorlevel%==0 (
+			echo.
+			echo Successfully uninstalled !progname!!
+		) else (
+			echo.
+			echo Failed to uninstall !progname!.
+			echo The program may not exist or require manual uninstallation.
+			echo Try using Programs and Features instead.
+		)
+	) else (
+		echo Uninstall cancelled.
+	)
+	
+	echo.
+	set /p another=Uninstall another program? [y/n]: 
+	if /I "!another!"=="y" goto :uninstallProgram
+	goto :installedProgramsScanner
 endlocal
