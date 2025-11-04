@@ -67,6 +67,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		if "%answer%"=="24" goto :networkSecurity
 		if "%answer%"=="25" goto :exploitScanner
 		if "%answer%"=="26" goto :serverHardening
+		if "%answer%"=="27" goto :installedProgramsScanner
 		rem turn on screensaver
 		rem password complexity
 		if "%answer%"=="69" exit
@@ -1939,22 +1940,25 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	rem Remove DisableAntiSpyware registry key if it exists
 	reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /f 2>nul
-	if %errorlevel%==0 (
-		echo Removed DisableAntiSpyware policy.
-	) else (
+	if errorlevel 1 (
 		echo DisableAntiSpyware policy not found (already enabled).
+	) else (
+		echo Removed DisableAntiSpyware policy.
 	)
 	
 	rem Enable Windows Defender service
 	echo.
 	echo Enabling Windows Defender service...
 	sc config WinDefend start= auto
-	net start WinDefend 2>nul
+	echo Service set to automatic startup.
 	
-	if %errorlevel%==0 (
-		echo Windows Defender service started.
+	echo.
+	echo Starting Windows Defender service...
+	net start WinDefend 2>nul
+	if errorlevel 1 (
+		echo Windows Defender service may already be running or requires reboot.
 	) else (
-		echo Windows Defender service may already be running.
+		echo Windows Defender service started successfully.
 	)
 	
 	echo.
