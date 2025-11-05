@@ -9,6 +9,24 @@ if %errorlevel%==0 (
     exit
 )
 
+rem Initialize logging system
+set "TIMESTAMP=%DATE:~-4%-%DATE:~4,2%-%DATE:~7,2%_%TIME:~0,2%-%TIME:~3,2%-%TIME:~6,2%"
+set "TIMESTAMP=%TIMESTAMP: =0%"
+set "LOGFILE=%~dp0CyberPatriot_Log_%TIMESTAMP%.txt"
+set "ROLLBACK_LOG=%~dp0CyberPatriot_Rollback_%TIMESTAMP%.txt"
+
+echo ======================================== > "%LOGFILE%"
+echo CyberPatriot Windows Hardening Script >> "%LOGFILE%"
+echo Session Started: %DATE% %TIME% >> "%LOGFILE%"
+echo ======================================== >> "%LOGFILE%"
+echo. >> "%LOGFILE%"
+
+echo ======================================== > "%ROLLBACK_LOG%"
+echo CyberPatriot Rollback Log >> "%ROLLBACK_LOG%"
+echo Session Started: %DATE% %TIME% >> "%ROLLBACK_LOG%"
+echo ======================================== >> "%ROLLBACK_LOG%"
+echo. >> "%ROLLBACK_LOG%"
+
 cls
 
 set /p answer=Have you answered all the forensics questions?[y/n]: 
@@ -37,7 +55,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo "21)Windows Defender Menu  22)Powershell check"
 	echo "23)Security Checks        24)Network checks(ports&stuff)"
 	echo "25)Exploit/Script Scan    26)Server Hardening"
-	echo "27)Installed Programs     28)"
+	echo "27)Installed Programs     28)Hosts File Check"
+	echo "29)Registry Persistence   30)Generate Report"
 	echo "69)Exit				    70)Reboot"
 	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	set /p answer=Please choose an option: 
@@ -68,6 +87,9 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		if "%answer%"=="25" goto :exploitScanner
 		if "%answer%"=="26" goto :serverHardening
 		if "%answer%"=="27" goto :installedProgramsScanner
+		if "%answer%"=="28" goto :hostsFileCheck
+		if "%answer%"=="29" goto :registryPersistence
+		if "%answer%"=="30" goto :generateReport
 		rem turn on screensaver
 		rem password complexity
 		if "%answer%"=="69" exit
@@ -80,6 +102,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :accountPolicies
 	echo Configuring Account Policies...
 	echo.
+	echo [ACTION] Account Policies Configuration >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	
 	rem Password Policy
 	echo Setting Password Policy...
@@ -87,21 +111,32 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	net accounts /maxpwage:30
 	net accounts /minpwage:3
 	net accounts /uniquepw:24
+	echo - Password min length: 14 >> "%LOGFILE%"
+	echo - Password max age: 30 days >> "%LOGFILE%"
+	echo - Password min age: 3 days >> "%LOGFILE%"
+	echo - Password history: 24 >> "%LOGFILE%"
 	
 	rem Enable password complexity and disable reversible encryption
 	secedit /export /cfg %temp%\secpol.cfg
 	(echo [Unicode]&echo Unicode=yes&echo [System Access]&echo PasswordComplexity = 1&echo PasswordHistorySize = 24&echo ClearTextPassword = 0&echo [Version]&echo signature="$CHICAGO$"&echo Revision=1) > %temp%\secpol.cfg
 	secedit /configure /db %windir%\security\local.sdb /cfg %temp%\secpol.cfg /areas SECURITYPOLICY
 	del %temp%\secpol.cfg
+	echo - Password complexity: ENABLED >> "%LOGFILE%"
+	echo - Reversible encryption: DISABLED >> "%LOGFILE%"
 	
 	rem Account Lockout Policy
 	echo Setting Account Lockout Policy...
 	net accounts /lockoutduration:30
 	net accounts /lockoutthreshold:5
 	net accounts /lockoutwindow:30
+	echo - Lockout duration: 30 minutes >> "%LOGFILE%"
+	echo - Lockout threshold: 5 attempts >> "%LOGFILE%"
+	echo - Lockout window: 30 minutes >> "%LOGFILE%"
 	
 	echo.
 	echo Account Policies configured successfully!
+	echo RESULT: Account Policies configured successfully! >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	pause
 	goto :menu
 
@@ -109,11 +144,14 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :localPolicies
 	echo Configuring Local Policies...
 	echo.
+	echo [ACTION] Local Policies Configuration >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	
 	rem Audit Policy - Set everything to Success, Failure
 	echo Setting Audit Policies...
 	auditpol /set /category:* /success:enable
 	auditpol /set /category:* /failure:enable
+	echo - Audit policies: All categories enabled >> "%LOGFILE%"
 	
 	rem Security Options
 	echo Setting Security Options...
@@ -197,21 +235,23 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	echo.
 	echo Local Policies configured successfully!
-	pause
-	goto :menu
-
-:disableGuest
+	echo RESULT: Local :disableGuest
 	echo Disabling Guest account...
 	echo.
+	echo [ACTION] Disable Guest Account >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	
 	rem Check if Guest account is already disabled
 	net user Guest | findstr /C:"Account active" | findstr /C:"No"
 	if %errorlevel%==0 (
 		echo Guest account is already disabled.
+		echo RESULT: Guest account already disabled >> "%LOGFILE%"
 	) else (
 		net user Guest /active:no
 		echo Guest account has been disabled.
+		echo RESULT: Guest account disabled successfully >> "%LOGFILE%"
 	)
+	echo. >> "%LOGFILE%"
 	
 	echo.
 	pause
@@ -2736,7 +2776,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo Media/Entertainment:
 	echo - Spotify, Discord, Skype, iTunes (if prohibited)
 	echo.
-	echo ============================================
+	echo "============================================"
 	echo.
 	echo To uninstall a program:
 	echo 1. Option 1: Auto-uninstall (requires EXACT name match)
@@ -2818,4 +2858,349 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	set /p another=Uninstall another program? [y/n]: 
 	if /I "!another!"=="y" goto :uninstallProgram
 	goto :installedProgramsScanner
+
+:hostsFileCheck
+	echo "============== HOSTS FILE INSPECTOR =============="
+	echo.
+	echo Checking hosts file for DNS hijacking and suspicious entries...
+	echo.
+	echo [ACTION] Hosts File Check >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
+	
+	set "HOSTSFILE=%SystemRoot%\System32\drivers\etc\hosts"
+	
+	if not exist "%HOSTSFILE%" (
+		echo WARNING: Hosts file not found at %HOSTSFILE%!
+		echo WARNING: Hosts file not found! >> "%LOGFILE%"
+		pause
+		goto :menu
+	)
+	
+	echo Backing up current hosts file...
+	copy "%HOSTSFILE%" "%HOSTSFILE%.backup_%TIMESTAMP%" >nul 2>&1
+	echo BACKUP: Hosts file backed up to %HOSTSFILE%.backup_%TIMESTAMP% >> "%ROLLBACK_LOG%"
+	
+	echo.
+	echo ======== CURRENT HOSTS FILE CONTENTS ========
+	type "%HOSTSFILE%"
+	echo =============================================
+	echo.
+	
+	rem Create analysis file
+	echo Analyzing hosts file for threats... > %temp%\hosts_analysis.txt
+	echo. >> %temp%\hosts_analysis.txt
+	echo ======== SUSPICIOUS ENTRIES FOUND ======== >> %temp%\hosts_analysis.txt
+	echo. >> %temp%\hosts_analysis.txt
+	
+	rem Check for suspicious redirects (non-localhost, non-comment lines)
+	findstr /V /B "#" "%HOSTSFILE%" | findstr /V /B "::" | findstr /V "^$" | findstr /V "127.0.0.1 localhost" | findstr /V "::1 localhost" > %temp%\hosts_suspicious.txt 2>nul
+	
+	if %errorlevel%==0 (
+		echo WARNING: Potentially malicious entries detected! >> %temp%\hosts_analysis.txt
+		echo. >> %temp%\hosts_analysis.txt
+		type %temp%\hosts_suspicious.txt >> %temp%\hosts_analysis.txt
+		echo. >> %temp%\hosts_analysis.txt
+		echo ALERT: Suspicious hosts file entries detected! >> "%LOGFILE%"
+		type %temp%\hosts_suspicious.txt >> "%LOGFILE%"
+	) else (
+		echo No suspicious entries detected. Hosts file appears clean. >> %temp%\hosts_analysis.txt
+		echo RESULT: Hosts file appears clean. >> "%LOGFILE%"
+	)
+	
+	echo. >> %temp%\hosts_analysis.txt
+	echo ======== COMMON DNS HIJACK TARGETS ======== >> %temp%\hosts_analysis.txt
+	echo Check if these domains are redirected: >> %temp%\hosts_analysis.txt
+	echo - google.com, facebook.com, youtube.com >> %temp%\hosts_analysis.txt
+	echo - microsoft.com, apple.com, amazon.com >> %temp%\hosts_analysis.txt
+	echo - banking websites, antivirus update servers >> %temp%\hosts_analysis.txt
+	echo. >> %temp%\hosts_analysis.txt
+	
+	for %%D in (google.com facebook.com youtube.com microsoft.com windowsupdate.com) do (
+		findstr /I "%%D" "%HOSTSFILE%" >> %temp%\hosts_analysis.txt 2>nul
+	)
+	
+	echo. >> %temp%\hosts_analysis.txt
+	echo ======== RECOMMENDATIONS ======== >> %temp%\hosts_analysis.txt
+	echo 1. Remove any redirects to 127.0.0.1 for legitimate websites >> %temp%\hosts_analysis.txt
+	echo 2. Delete lines redirecting to unusual IP addresses >> %temp%\hosts_analysis.txt
+	echo 3. Keep only localhost entries (127.0.0.1 and ::1) >> %temp%\hosts_analysis.txt
+	echo 4. If heavily modified, consider restoring default hosts file >> %temp%\hosts_analysis.txt
+	echo. >> %temp%\hosts_analysis.txt
+	
+	echo Opening analysis in Notepad...
+	start notepad %temp%\hosts_analysis.txt
+	
+	echo.
+	echo ============================================
+	echo OPTIONS:
+	echo 1. Edit hosts file manually (opens in Notepad)
+	echo 2. Restore default hosts file (removes all entries)
+	echo 3. Back to menu
+	echo ============================================
+	echo.
+	set /p action=Choose an option [1/2/3]: 
+	
+	if "!action!"=="1" (
+		echo Opening hosts file for editing...
+		notepad "%HOSTSFILE%"
+		echo MANUAL EDIT: User edited hosts file manually >> "%LOGFILE%"
+		pause
+		goto :hostsFileCheck
+	)
+	
+	if "!action!"=="2" (
+		echo.
+		echo WARNING: This will remove ALL entries from hosts file!
+		set /p confirm=Are you sure? [y/n]: 
+		
+		if /I "!confirm!"=="y" (
+			echo # Default Windows hosts file > "%HOSTSFILE%"
+			echo # Copyright (c) Microsoft Corp. >> "%HOSTSFILE%"
+			echo. >> "%HOSTSFILE%"
+			echo 127.0.0.1       localhost >> "%HOSTSFILE%"
+			echo ::1             localhost >> "%HOSTSFILE%"
+			
+			echo.
+			echo Hosts file has been reset to default!
+			echo RESET: Hosts file restored to default >> "%LOGFILE%"
+			echo ROLLBACK: To restore, copy %HOSTSFILE%.backup_%TIMESTAMP% to %HOSTSFILE% >> "%ROLLBACK_LOG%"
+		) else (
+			echo Reset cancelled.
+		)
+	)
+	
+	rem Cleanup temp files
+	del %temp%\hosts_analysis.txt 2>nul
+	del %temp%\hosts_suspicious.txt 2>nul
+	
+	echo.
+	pause
+	goto :menu
+
+:registryPersistence
+	echo "============== REGISTRY PERSISTENCE SCANNER =============="
+	echo.
+	echo Scanning common autorun registry keys for malware persistence...
+	echo.
+	echo [ACTION] Registry Persistence Scan >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
+	
+	set "SCAN_FILE=%temp%\registry_persistence_scan.txt"
+	
+	echo ======== REGISTRY PERSISTENCE SCAN RESULTS ======== > "%SCAN_FILE%"
+	echo Scan Date: %DATE% %TIME% >> "%SCAN_FILE%"
+	echo. >> "%SCAN_FILE%"
+	echo IMPORTANT: Review these entries carefully for suspicious programs! >> "%SCAN_FILE%"
+	echo Look for unfamiliar names, misspellings, or programs in unusual locations. >> "%SCAN_FILE%"
+	echo. >> "%SCAN_FILE%"
+	
+	echo Scanning registry keys...
+	echo.
+	
+	rem HKLM Run keys
+	echo ======== HKLM Run Keys (System-wide autostart) ======== >> "%SCAN_FILE%"
+	echo [1/10] Scanning HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+	reg query "HKLM\Software\Microsoft\Windows\CurrentVersion\Run" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	
+	echo [2/10] Scanning HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce
+	reg query "HKLM\Software\Microsoft\Windows\CurrentVersion\RunOnce" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	
+	rem HKCU Run keys
+	echo ======== HKCU Run Keys (Current user autostart) ======== >> "%SCAN_FILE%"
+	echo [3/10] Scanning HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+	reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	
+	echo [4/10] Scanning HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce
+	reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	
+	rem Startup folders
+	echo ======== Startup Folder Keys ======== >> "%SCAN_FILE%"
+	echo [5/10] Scanning Shell Folders
+	reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	
+	reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	
+	rem Winlogon
+	echo ======== Winlogon Keys (Critical system login) ======== >> "%SCAN_FILE%"
+	echo [6/10] Scanning Winlogon keys
+	reg query "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	echo CHECK: Verify Shell=explorer.exe and Userinit=C:\Windows\system32\userinit.exe >> "%SCAN_FILE%"
+	echo. >> "%SCAN_FILE%"
+	
+	rem Services
+	echo ======== Service Registry Keys ======== >> "%SCAN_FILE%"
+	echo [7/10] Scanning suspicious service patterns
+	echo NOTE: Full service list available via 'sc query' command >> "%SCAN_FILE%"
+	echo. >> "%SCAN_FILE%"
+	
+	rem Browser Helper Objects
+	echo ======== Browser Helper Objects (BHO) ======== >> "%SCAN_FILE%"
+	echo [8/10] Scanning Internet Explorer BHOs
+	reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Browser Helper Objects" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	
+	rem AppInit DLLs
+	echo ======== AppInit DLLs (Dangerous injection method) ======== >> "%SCAN_FILE%"
+	echo [9/10] Scanning AppInit DLLs
+	reg query "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Windows" /v AppInit_DLLs >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	echo WARNING: AppInit_DLLs should be empty or contain only trusted Microsoft DLLs >> "%SCAN_FILE%"
+	echo. >> "%SCAN_FILE%"
+	
+	rem Known DLLs
+	echo ======== Image File Execution Options (IFEO) ======== >> "%SCAN_FILE%"
+	echo [10/10] Scanning IFEO debugger redirects
+	reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options" >> "%SCAN_FILE%" 2>nul
+	echo. >> "%SCAN_FILE%"
+	echo WARNING: Debugger entries can hijack legitimate programs >> "%SCAN_FILE%"
+	echo. >> "%SCAN_FILE%"
+	
+	echo ======== SUSPICIOUS INDICATORS ======== >> "%SCAN_FILE%"
+	echo Look for: >> "%SCAN_FILE%"
+	echo - Programs running from TEMP, AppData, or user folders >> "%SCAN_FILE%"
+	echo - Misspelled Microsoft programs (e.g., svch0st.exe, explor3r.exe) >> "%SCAN_FILE%"
+	echo - Random character names (e.g., a1b2c3d4.exe) >> "%SCAN_FILE%"
+	echo - Hidden file extensions (.txt.exe, .jpg.scr) >> "%SCAN_FILE%"
+	echo - Multiple instances of same program in different locations >> "%SCAN_FILE%"
+	echo - Programs with no manufacturer or suspicious publisher >> "%SCAN_FILE%"
+	echo. >> "%SCAN_FILE%"
+	
+	echo ======== NEXT STEPS ======== >> "%SCAN_FILE%"
+	echo 1. Review each entry above carefully >> "%SCAN_FILE%"
+	echo 2. Research unfamiliar program names online >> "%SCAN_FILE%"
+	echo 3. Delete suspicious registry entries manually via regedit >> "%SCAN_FILE%"
+	echo 4. Cross-reference with Startup Management menu (option 19) >> "%SCAN_FILE%"
+	echo 5. Use antivirus/antimalware to scan suspicious file paths >> "%SCAN_FILE%"
+	echo. >> "%SCAN_FILE%"
+	
+	echo Scan complete! Opening results...
+	echo RESULT: Registry persistence scan completed >> "%LOGFILE%"
+	echo See %SCAN_FILE% for details >> "%LOGFILE%"
+	echo.
+	
+	start notepad "%SCAN_FILE%"
+	
+	echo.
+	echo ============================================
+	echo OPTIONS:
+	echo 1. Open Registry Editor (regedit) to manually remove entries
+	echo 2. Open Startup Management (option 19)
+	echo 3. Back to menu
+	echo ============================================
+	echo.
+	set /p action=Choose an option [1/2/3]: 
+	
+	if "!action!"=="1" (
+		echo Opening Registry Editor...
+		echo WARNING: Be careful when editing the registry!
+		echo Make sure to only delete confirmed malicious entries.
+		pause
+		regedit
+		echo MANUAL EDIT: User opened regedit for manual cleanup >> "%LOGFILE%"
+	)
+	
+	if "!action!"=="2" goto :startupManagement
+	
+	echo.
+	pause
+	goto :menu
+
+:generateReport
+	echo "============== COMPETITION REPORT GENERATOR =============="
+	echo.
+	echo Generating comprehensive hardening report...
+	echo.
+	
+	set "REPORT_FILE=%~dp0CyberPatriot_Report_%TIMESTAMP%.txt"
+	
+	echo ======================================== > "%REPORT_FILE%"
+	echo   CYBERPATRIOT COMPETITION REPORT >> "%REPORT_FILE%"
+	echo ======================================== >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	echo Report Generated: %DATE% %TIME% >> "%REPORT_FILE%"
+	echo Computer Name: %COMPUTERNAME% >> "%REPORT_FILE%"
+	echo User: %USERNAME% >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	
+	echo ======== SYSTEM INFORMATION ======== >> "%REPORT_FILE%"
+	systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Type" >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	
+	echo ======== ACTIONS PERFORMED ======== >> "%REPORT_FILE%"
+	type "%LOGFILE%" >> "%REPORT_FILE%" 2>nul
+	echo. >> "%REPORT_FILE%"
+	
+	echo ======== CURRENT SECURITY STATUS ======== >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	
+	echo [Password Policy] >> "%REPORT_FILE%"
+	net accounts >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	
+	echo [Firewall Status] >> "%REPORT_FILE%"
+	netsh advfirewall show allprofiles state >> "%REPORT_FILE%" 2>nul
+	echo. >> "%REPORT_FILE%"
+	
+	echo [Windows Defender Status] >> "%REPORT_FILE%"
+	sc query WinDefend | findstr "STATE" >> "%REPORT_FILE%" 2>nul
+	echo. >> "%REPORT_FILE%"
+	
+	echo [User Accounts] >> "%REPORT_FILE%"
+	net user >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	
+	echo [Administrators Group] >> "%REPORT_FILE%"
+	net localgroup Administrators >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	
+	echo [Listening Ports] >> "%REPORT_FILE%"
+	netstat -ano | findstr "LISTENING" >> "%REPORT_FILE%" 2>nul
+	echo. >> "%REPORT_FILE%"
+	
+	echo [Running Services (Non-Microsoft)] >> "%REPORT_FILE%"
+	sc query type= service state= all | findstr /V "Microsoft" >> "%REPORT_FILE%" 2>nul
+	echo. >> "%REPORT_FILE%"
+	
+	echo ======== ROLLBACK INFORMATION ======== >> "%REPORT_FILE%"
+	type "%ROLLBACK_LOG%" >> "%REPORT_FILE%" 2>nul
+	echo. >> "%REPORT_FILE%"
+	
+	echo ======== RECOMMENDED MANUAL CHECKS ======== >> "%REPORT_FILE%"
+	echo 1. Answer all forensics questions >> "%REPORT_FILE%"
+	echo 2. Install Windows Updates >> "%REPORT_FILE%"
+	echo 3. Run full antivirus scan >> "%REPORT_FILE%"
+	echo 4. Check Event Viewer for security events >> "%REPORT_FILE%"
+	echo 5. Review README for scoring requirements >> "%REPORT_FILE%"
+	echo 6. Verify all unauthorized software removed >> "%REPORT_FILE%"
+	echo 7. Confirm authorized users only in admin group >> "%REPORT_FILE%"
+	echo 8. Test that critical services still function >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	
+	echo ======== FILES GENERATED ======== >> "%REPORT_FILE%"
+	echo - Action Log: %LOGFILE% >> "%REPORT_FILE%"
+	echo - Rollback Log: %ROLLBACK_LOG% >> "%REPORT_FILE%"
+	echo - This Report: %REPORT_FILE% >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	
+	echo Report generation complete!
+	echo.
+	echo Report saved to: %REPORT_FILE%
+	echo.
+	echo Opening report...
+	start notepad "%REPORT_FILE%"
+	
+	echo.
+	echo TIP: Include this report in your competition README documentation!
+	echo.
+	pause
+	goto :menu
+
+
 endlocal
