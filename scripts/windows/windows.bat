@@ -285,6 +285,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :userProp
 	echo Setting user properties for ALL users...
 	echo.
+	echo [ACTION] User Management - Setting user properties >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo Configuring:
 	echo - User must change password at next logon (except admin accounts)
 	echo - User CAN change password
@@ -327,12 +329,16 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	echo.
 	echo User properties set successfully for all users!
+	echo RESULT: User properties configured for all users >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	pause
 	goto :userManagement
 
 :passwd
 	echo Changing all user passwords (except current user)
 	echo.
+	echo [ACTION] User Management - Changing all user passwords >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	
 	rem Get current username
 	set CURRENTUSER=%USERNAME%
@@ -363,6 +369,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	echo.
 	echo Password changes complete.
+	echo RESULT: Password changes complete >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	pause
 	goto :userManagement
 
@@ -375,6 +383,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 		net user
 		set /p DISABLE=What is the name of the user?:
 			net user !DISABLE! /active:no
+		echo [ACTION] User Management - Disabled user: !DISABLE! >> "%LOGFILE%"
+		echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 		echo !DISABLE! has been disabled
 		pause
 		goto :disUser
@@ -394,11 +404,14 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	set /p PASS=Enter a password for the user: 
 	if "!PASS!"==" " (
 		net user !NAME! /add
+		echo [ACTION] User Management - Created user: !NAME! (no password) >> "%LOGFILE%"
 	) else (
 		net user !NAME! !PASS! /add
+		echo [ACTION] User Management - Created user: !NAME! (with password) >> "%LOGFILE%"
 	)
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo !NAME! has been added
-	pause 
+	pause
 
 	set /p answer=Do you want to create another user?[y/n]: 
 	if /I "%answer%"=="y" goto :createUser
@@ -416,6 +429,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	net user
 	set /p DELUSER=What is the name of the user to delete?: 
 	net user !DELUSER! /delete
+	echo [ACTION] User Management - Deleted user: !DELUSER! >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo !DELUSER! has been deleted
 	pause
 	
@@ -762,6 +777,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	)
 	
 	echo.
+	echo [ACTION] Services - Disabling unnecessary services >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo Disabling services...
 	echo.
 	
@@ -832,6 +849,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	echo.
 	echo Common unnecessary services have been disabled!
+	echo RESULT: Unnecessary services disabled >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	pause
 	goto :servicesManagement
@@ -943,6 +962,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	)
 	
 	echo.
+	echo [ACTION] Windows Features - Removing insecure features >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo Removing features...
 	echo This may take a few minutes...
 	echo.
@@ -980,6 +1001,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo.
 	echo Common unnecessary features have been disabled!
 	echo NOTE: A restart may be required for changes to take effect.
+	echo RESULT: Insecure Windows features removed >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	pause
 	goto :windowsFeatures
@@ -1030,6 +1053,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :disableRDP
 	echo Disabling Remote Desktop...
 	echo.
+	echo [ACTION] Remote Desktop - Disabled >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	
 	rem Disable Remote Desktop connections
 	reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 1 /f
@@ -1043,6 +1068,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo.
 	echo Remote Desktop and Remote Assistance have been disabled.
 	echo Reboot for changes to take full effect.
+	echo RESULT: Remote Desktop disabled >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	pause
 	goto :menu
@@ -1078,6 +1105,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :screensaver
 	echo "============== SCREENSAVER CONFIGURATION =============="
 	echo.
+	echo [ACTION] Screensaver - Configured password protection >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo "Configuring screensaver to require password on resume..."
 	echo.
 	
@@ -1104,6 +1133,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo - Timeout set to 5 minutes
 	echo - Password required on resume
 	echo - Logon screen displayed on power resume
+	echo RESULT: Screensaver configured successfully >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	
 	set /p open=Would you like to open screensaver settings to verify?[y/n]: 
@@ -1118,6 +1149,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :uacConfig
 	echo "============== UAC CONFIGURATION =============="
 	echo.
+	echo [ACTION] UAC - Set to highest level >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo "Setting User Account Control to highest level (Always notify)..."
 	echo.
 	
@@ -1139,6 +1172,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo - UAC level set to: Always notify
 	echo - Secure desktop prompting: Enabled
 	echo - UAC: Enabled
+	echo RESULT: UAC configured to highest level >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	
 	set /p open=Would you like to open UAC settings to verify?[y/n]: 
@@ -1153,6 +1188,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :autoPlayConfig
 	echo "============== AUTOPLAY CONFIGURATION =============="
 	echo.
+	echo [ACTION] AutoPlay - Disabled for all media >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo "Disabling AutoPlay for all media and devices..."
 	echo.
 	
@@ -1172,6 +1209,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo AutoPlay has been disabled!
 	echo - AutoPlay for all media and devices: OFF
 	echo - AutoPlay for all drives: Disabled
+	echo RESULT: AutoPlay disabled successfully >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	
 	set /p open=Would you like to open AutoPlay settings to verify?[y/n]: 
@@ -1204,6 +1243,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :enableFirewall
 	echo Enabling and configuring Windows Defender Firewall...
 	echo.
+	echo [ACTION] Firewall - Enabled and configured all profiles >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	
 	rem Turn on firewall for all profiles
 	netsh advfirewall set allprofiles state on
@@ -1245,6 +1286,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo - Logging: Enabled (16384 KB)
 	echo - Log dropped packets: Yes
 	echo - Log successful connections: Yes
+	echo RESULT: Firewall configured successfully >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	pause
 	goto :firewallConfig
@@ -1348,6 +1391,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :enableAutoUpdate
 	echo Enabling Automatic Windows Updates...
 	echo.
+	echo [ACTION] Windows Updates - Enabled automatic updates >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	
 	rem Enable automatic updates via registry (value 4 = automatically download and install)
 	reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update" /v AUOptions /t REG_DWORD /d 4 /f
@@ -1366,6 +1411,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo Automatic Windows Updates have been enabled!
 	echo - Mode: Automatically download and install updates
 	echo - Windows Update service: Started and set to automatic
+	echo RESULT: Automatic updates enabled >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	pause
 	goto :autoUpdate
@@ -1399,6 +1446,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :rpcRdpEncryption
 	echo "============== RPC & RDP ENCRYPTION CONFIGURATION =============="
 	echo.
+	echo [ACTION] RPC/RDP - Configured secure encryption >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo Configuring secure RPC and RDP encryption settings...
 	echo.
 	
@@ -1432,6 +1481,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo - Network Level Authentication: ENABLED
 	echo - Client connection encryption: HIGH (3)
 	echo.
+	echo RESULT: RPC/RDP encryption configured >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo NOTE: Run 'gpupdate /force' to apply Group Policy changes immediately
 	echo.
 	
@@ -1451,6 +1502,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :disableIPv6
 	echo "============== DISABLE IPv6 =============="
 	echo.
+	echo [ACTION] IPv6 - Disabled >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo Disabling IPv6 on all network adapters...
 	echo.
 	
@@ -1468,6 +1521,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo What was done:
 	echo - Registry DisabledComponents set to 0xff (255)
 	echo - IPv6 disabled on all network adapters
+	echo RESULT: IPv6 disabled successfully >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	echo.
 	echo NOTE: A system restart is required for changes to take full effect.
 	echo.
@@ -1487,6 +1542,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :badFiles
 	echo "============= MEDIA FILES SCANNER =============="
 	echo.
+	echo [ACTION] Media Files - Scanning for prohibited files >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo WARNING: Do NOT delete files related to forensics questions
 	echo until after you have gotten the points for them!
 	echo.
@@ -1524,8 +1581,12 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 			)
 			echo.
 			echo Media file deletion complete.
+			echo RESULT: Media files deleted >> "%LOGFILE%"
+			echo. >> "%LOGFILE%"
 		) else (
 			echo Media files were not deleted.
+			echo RESULT: Media files NOT deleted (user cancelled) >> "%LOGFILE%"
+			echo. >> "%LOGFILE%"
 		)
 	) else (
 		echo No prohibited media files found.
@@ -1538,12 +1599,16 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	:scanHiddenFiles
 	echo "============== HIDDEN & SUSPICIOUS FILES SCANNER =============="
 	echo.
+	echo [ACTION] Hidden Files - Scanning for suspicious files >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo WARNING: Review carefully before deleting!
 	echo Some system files are hidden for a reason.
 	echo.
 	echo Scanning for:
-	echo - Hidden files in user directories
-	echo - Suspicious file types (.zip, .rar, .7z, .exe, .bat, .vbs, .ps1)
+	echo - Suspicious file types in Desktop, Downloads, Documents
+	echo - Archive files: .zip, .rar, .7z
+	echo - Executable files: .exe, .bat, .vbs, .ps1
+	echo - Hidden files in Desktop, Downloads, Documents
 	echo.
 	
 	set /p answer=Continue with scan?[y/n]: 
@@ -1553,12 +1618,19 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo Scanning... This may take a moment.
 	echo.
 	
-	rem Search for hidden files and suspicious types in user directories
-	echo Searching C:\Users\ for hidden and suspicious files...
-	dir /s /b /a:h C:\Users\*.zip C:\Users\*.rar C:\Users\*.7z C:\Users\*.exe C:\Users\*.bat C:\Users\*.vbs C:\Users\*.ps1 C:\Users\*.cmd 2>nul > %temp%\hiddenfiles.txt
+	rem Search for suspicious file types in common user locations
+	echo Searching C:\Users\ for suspicious files...
+	dir /s /b C:\Users\*\Desktop\*.zip C:\Users\*\Desktop\*.rar C:\Users\*\Desktop\*.7z C:\Users\*\Desktop\*.exe C:\Users\*\Desktop\*.bat C:\Users\*\Desktop\*.vbs C:\Users\*\Desktop\*.ps1 2>nul > %temp%\hiddenfiles.txt
+	dir /s /b C:\Users\*\Downloads\*.zip C:\Users\*\Downloads\*.rar C:\Users\*\Downloads\*.7z C:\Users\*\Downloads\*.exe C:\Users\*\Downloads\*.bat C:\Users\*\Downloads\*.vbs C:\Users\*\Downloads\*.ps1 2>nul >> %temp%\hiddenfiles.txt
+	dir /s /b C:\Users\*\Documents\*.zip C:\Users\*\Documents\*.rar C:\Users\*\Documents\*.7z C:\Users\*\Documents\*.exe C:\Users\*\Documents\*.bat C:\Users\*\Documents\*.vbs C:\Users\*\Documents\*.ps1 2>nul >> %temp%\hiddenfiles.txt
+	dir /s /b C:\Users\*\Music\*.exe C:\Users\*\Music\*.bat C:\Users\*\Music\*.vbs C:\Users\*\Music\*.ps1 2>nul >> %temp%\hiddenfiles.txt
+	dir /s /b C:\Users\*\Videos\*.exe C:\Users\*\Videos\*.bat C:\Users\*\Videos\*.vbs C:\Users\*\Videos\*.ps1 2>nul >> %temp%\hiddenfiles.txt
 	
-	rem Also search for hidden files with common extensions in Downloads
-	dir /s /b /a:h C:\Users\*\Downloads\* 2>nul >> %temp%\hiddenfiles.txt
+	rem Search for hidden files in Desktop, Downloads, Documents (excluding system files)
+	echo Searching for hidden files in common locations...
+	dir /s /b /a:h C:\Users\*\Desktop\* 2>nul | findstr /V /I "desktop.ini thumbs.db" >> %temp%\hiddenfiles.txt
+	dir /s /b /a:h C:\Users\*\Downloads\* 2>nul | findstr /V /I "desktop.ini thumbs.db" >> %temp%\hiddenfiles.txt
+	dir /s /b /a:h C:\Users\*\Documents\* 2>nul | findstr /V /I "desktop.ini thumbs.db" >> %temp%\hiddenfiles.txt
 	
 	rem Check if any files were found
 	for %%A in (%temp%\hiddenfiles.txt) do set filesize=%%~zA
@@ -1975,12 +2047,14 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :enableDefender
 	echo "============== ENABLE WINDOWS DEFENDER =============="
 	echo.
+	echo [ACTION] Windows Defender - Enabled >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo Enabling Windows Defender via registry and services...
 	echo.
 	
 	rem Remove DisableAntiSpyware registry key if it exists
 	reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /f 2>nul
-	if errorlevel 1 (
+	if %errorlevel% NEQ 0 (
 		echo DisableAntiSpyware policy not found (already enabled).
 	) else (
 		echo Removed DisableAntiSpyware policy.
@@ -1995,7 +2069,7 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo.
 	echo Starting Windows Defender service...
 	net start WinDefend 2>nul
-	if errorlevel 1 (
+	if %errorlevel% NEQ 0 (
 		echo Windows Defender service may already be running or requires reboot.
 	) else (
 		echo Windows Defender service started successfully.
@@ -2003,6 +2077,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	echo.
 	echo Windows Defender enabled!
+	echo RESULT: Windows Defender enabled successfully >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	pause
 	goto :windowsSecurityConfig
 
@@ -2065,6 +2141,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :enableRealTimeProtection
 	echo "============== ENABLE REAL-TIME PROTECTION =============="
 	echo.
+	echo [ACTION] Windows Defender - Enabled real-time protection >> "%LOGFILE%"
+	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo Enabling Real-time Protection...
 	echo.
 	
@@ -2085,6 +2163,8 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	echo.
 	echo Protection features configured!
+	echo RESULT: Real-time protection enabled >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
 	pause
 	goto :windowsSecurityConfig
 
@@ -3164,8 +3244,12 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	netstat -ano | findstr "LISTENING" >> "%REPORT_FILE%" 2>nul
 	echo. >> "%REPORT_FILE%"
 	
-	echo [Running Services (Non-Microsoft)] >> "%REPORT_FILE%"
-	sc query type= service state= all | findstr /V "Microsoft" >> "%REPORT_FILE%" 2>nul
+	echo [Startup Programs] >> "%REPORT_FILE%"
+	echo HKLM Run: >> "%REPORT_FILE%"
+	reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" 2>nul >> "%REPORT_FILE%"
+	echo. >> "%REPORT_FILE%"
+	echo HKCU Run: >> "%REPORT_FILE%"
+	reg query "HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" 2>nul >> "%REPORT_FILE%"
 	echo. >> "%REPORT_FILE%"
 	
 	echo ======== ROLLBACK INFORMATION ======== >> "%REPORT_FILE%"
