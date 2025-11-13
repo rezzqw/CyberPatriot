@@ -235,7 +235,13 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	
 	echo.
 	echo Local Policies configured successfully!
-	echo RESULT: Local :disableGuest
+	echo RESULT: Local Policies configured successfully >> "%LOGFILE%"
+	echo. >> "%LOGFILE%"
+	echo.
+	pause
+	goto :menu
+
+:disableGuest
 	echo Disabling Guest account...
 	echo.
 	echo [ACTION] Disable Guest Account >> "%LOGFILE%"
@@ -257,7 +263,6 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	pause
 	goto :menu
 
-	
 :userManagement
 	cls
 	echo "============== USER MANAGEMENT =============="
