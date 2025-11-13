@@ -1145,10 +1145,16 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	set /p open=Would you like to open screensaver settings to verify?[y/n]: 
 	if /I "%open%"=="y" (
 		control desk.cpl,,@screensaver
+		echo.
+		echo Returning to main menu...
+		pause
+		goto :menu
+	) else (
+		echo.
+		echo Returning to main menu...
+		pause
+		goto :menu
 	)
-	
-	pause
-	goto :menu
 
 
 :uacConfig
