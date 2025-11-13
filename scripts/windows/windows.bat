@@ -2058,37 +2058,25 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 :enableDefender
 	echo "============== ENABLE WINDOWS DEFENDER =============="
 	echo.
-	echo [ACTION] Windows Defender - Enabled >> "%LOGFILE%"
+	echo [ACTION] Windows Defender - Enable attempt >> "%LOGFILE%"
 	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	echo Enabling Windows Defender via registry and services...
 	echo.
 	
-	rem Remove DisableAntiSpyware registry key if it exists
+	rem Remove DisableAntiSpyware registry key if it exists (ignore errors)
 	reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /f 2>nul
-	if %errorlevel% NEQ 0 (
-		echo DisableAntiSpyware policy not found (already enabled).
-	) else (
-		echo Removed DisableAntiSpyware policy.
-	)
 	
-	rem Enable Windows Defender service
-	echo.
-	echo Enabling Windows Defender service...
+	rem Enable Windows Defender service (best-effort)
+	echo Enabling Windows Defender service (this may show errors if unsupported)...
 	sc config WinDefend start= auto
-	echo Service set to automatic startup.
 	
 	echo.
 	echo Starting Windows Defender service...
-	net start WinDefend 2>nul
-	if %errorlevel% NEQ 0 (
-		echo Windows Defender service may already be running or requires reboot.
-	) else (
-		echo Windows Defender service started successfully.
-	)
+	net start WinDefend
 	
 	echo.
-	echo Windows Defender enabled!
-	echo RESULT: Windows Defender enabled successfully >> "%LOGFILE%"
+	echo Windows Defender enable commands have been executed.
+	echo RESULT: Windows Defender enable commands executed >> "%LOGFILE%"
 	echo. >> "%LOGFILE%"
 	pause
 	goto :windowsSecurityConfig
