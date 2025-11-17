@@ -147,11 +147,16 @@ set /p answer=Have you answered all the forensics questions?[y/n]:
 	echo [ACTION] Local Policies Configuration >> "%LOGFILE%"
 	echo Timestamp: %DATE% %TIME% >> "%LOGFILE%"
 	
-	rem Audit Policy - Set everything to Success, Failure
-	echo Setting Audit Policies...
+	rem Audit Policy - Set everything to Success, Failure (basic + advanced)
+	echo Setting Audit Policies (basic and advanced)...
 	auditpol /set /category:* /success:enable
 	auditpol /set /category:* /failure:enable
-	echo - Audit policies: All categories enabled >> "%LOGFILE%"
+	auditpol /set /subcategory:* /success:enable
+	auditpol /set /subcategory:* /failure:enable
+	echo - Audit policies: All categories and subcategories enabled >> "%LOGFILE%"
+	
+	rem Force advanced audit policy (subcategories) to override legacy category policy
+	reg ADD HKLM\SYSTEM\CurrentControlSet\Control\Lsa /v SCENoApplyLegacyAuditPolicy /t REG_DWORD /d 1 /f
 	
 	rem Security Options
 	echo Setting Security Options...
